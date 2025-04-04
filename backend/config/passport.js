@@ -32,11 +32,13 @@ module.exports=(pool)=>{
     passport.deserializeUser(async (user_id,done)=>{
         try{
             const result= await pool.query("SELECT * FROM users WHERE user_id=$1",[user_id]);
+            console.log("User found during deserialization:", result.rows[0]);
             if(result.rows.length===0){
                 return done(null,false);
             }
             done(null,result.rows[0]);
         }catch(err){
+            console.error("Error during deserialization:", err);
             done(err);
         }
     });
