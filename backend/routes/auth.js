@@ -36,6 +36,7 @@ module.exports=(passport,pool)=>{
         }
     });
     router.post("/login", passport.authenticate("local"), (req, res) => {
+        console.log("Logged in user:", req.user);
         res.json({ message: "Login successful", user: req.user });
     });
 
