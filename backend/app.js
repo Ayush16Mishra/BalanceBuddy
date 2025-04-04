@@ -4,7 +4,8 @@ const { Pool } = require("pg");
 require("dotenv").config();
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const passport = require("./config/passport");
+
+
 
 const app = express();
 const PORT = 5000;
@@ -33,7 +34,7 @@ app.use(
     sameSite: "none",               // Allow cross-origin cookies
   })
 );
-
+const passport = require("./config/passport")(pool);
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -88,3 +89,8 @@ app.use((req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+
+
+
+
