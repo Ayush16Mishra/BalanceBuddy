@@ -28,16 +28,17 @@ client.connect()
                 store: new pgSession({
                     conString: process.env.DATABASE_URL,
                     tableName: "session", // Optional: specify a session table name
-                }),
+                }),     
+                name: "connect.sid", // ✅ optional but recommended
                 secret: process.env.SESSION_SECRET || "secret_key",
                 resave: false,
                 saveUninitialized: false,
                 cookie: {
-                    secure: true,  
-                    httpOnly: true,
-                    sameSite: "none", 
-                    maxAge: 24 * 60 * 60 * 1000 
-                  },
+                  secure: true,        // ✅ required for HTTPS (like Vercel + Railway)
+                  httpOnly: true,
+                  sameSite: "none",    // ✅ required for cross-origin cookies
+                  maxAge: 24 * 60 * 60 * 1000 // 1 day
+                }
                    
             })
         );
