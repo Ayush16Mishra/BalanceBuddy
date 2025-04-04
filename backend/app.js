@@ -31,7 +31,7 @@ app.use(
     maxAge: 24 * 60 * 60 * 1000,    // 1 day (cookie expiry)
     secure: process.env.NODE_ENV === "production", // Use secure cookies in production (require HTTPS)
     httpOnly: true,                 // Ensure the cookie is HTTP-only
-    sameSite: "none",               // Allow cross-origin cookies
+    sameSite:  process.env.NODE_ENV === "production" ? "none" : "lax",               // Allow cross-origin cookies
   })
 );
 app.use((req, res, next) => {
@@ -55,7 +55,6 @@ app.use(passport.session());
 
 // CORS configuration
 const allowedOrigins = [
-  "https://balance-buddy-ijcrz5req-ayush-mishras-projects-6e8c1469.vercel.app",
   "https://balance-buddy-ruddy.vercel.app",
   "http://localhost:3000",
 ];
