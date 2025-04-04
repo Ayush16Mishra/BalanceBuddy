@@ -18,14 +18,17 @@ module.exports=(pool)=>{
                 if(!isMatch){
                     return done(null,false,{message:"Incorrect password."});
                 }
+                console.log("User found:", user);  // Log user object
                 return done(null,user);
             }catch(err){
+                console.error("Error in passport login strategy:", err);
                 return done(err);
             }
 
         })
     );
     passport.serializeUser((user,done)=>{
+        console.log("Serializing user:", user);
         done(null,user.user_id);
     })
 
