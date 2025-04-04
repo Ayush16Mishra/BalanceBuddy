@@ -4,10 +4,11 @@ const { Pool } = require("pg");
 require("dotenv").config();
 const cors = require("cors");
 const bodyParser = require("body-parser");
-app.set('trust proxy', 1);
+
 
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = 5000;
 
 app.use(express.json());
