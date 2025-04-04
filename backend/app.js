@@ -48,13 +48,22 @@ const chartRoutes=require("./routes/charts")(client);
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-app.use(
+const allowedOrigins = [
+    "https://balance-buddy-5r1ti57vq-ayush-mishras-projects-6e8c1469.vercel.app",
+    "http://localhost:3000"
+  ];
+  app.use(
     cors({
-        origin: "https://balance-buddy-uyq4aq4pp-ayush-mishras-projects-6e8c1469.vercel.app", // Allow requests only from your frontend URL
-        credentials: true, // Allow cookies and authentication headers
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin || allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error("Not allowed by CORS"));
+      },
+      credentials: true,
     })
-);
+  );
 
 app.get('/', (req, res) => {
     res.send('API is running. Navigate to /api for endpoints.');
