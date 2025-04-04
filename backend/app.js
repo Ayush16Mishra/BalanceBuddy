@@ -34,6 +34,18 @@ app.use(
     sameSite: "none",               // Allow cross-origin cookies
   })
 );
+app.use((req, res, next) => {
+  if (req.session && typeof req.session.regenerate !== "function") {
+    req.session.regenerate = (cb) => cb();
+  }
+  if (req.session && typeof req.session.destroy !== "function") {
+    req.session.destroy = (cb) => {
+      req.session = null;
+      cb();
+    };
+  }
+  next();
+});
 const passport = require("./config/passport")(pool);
 app.use(passport.initialize());
 app.use(passport.session());
