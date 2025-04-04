@@ -13,13 +13,11 @@ const PORT=5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const client= new Client({
-    host:process.env.DB_HOST,
-    user:process.env.DB_USER,
-    password:process.env.DB_PASSWORD,
-    port:process.env.DB_PORT,
-    database:process.env.DB_NAME
+const client = new Client({
+    connectionString: process.env.DATABASE_URL, 
+    ssl: { rejectUnauthorized: false }  
 });
+
 
 client.connect()
           .then(()=>console.log("Connected to postgress"))
@@ -28,9 +26,8 @@ client.connect()
           app.use(
             session({
                 store: new pgSession({
-                    pool: client, // Use the existing PostgreSQL client
+                    conString: process.env.DATABASE_URL,
                     tableName: "session", // Optional: specify a session table name
-                    createTableIfMissing: true, // Auto-create table if missing
                 }),
                 secret: process.env.SESSION_SECRET || "secret_key",
                 resave: false,
