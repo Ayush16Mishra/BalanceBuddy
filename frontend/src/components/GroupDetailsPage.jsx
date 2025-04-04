@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 const API_BASE = import.meta.env.VITE_API_URL;
-
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "https://balancebuddy-production.up.railway.app"; // optional
 
 const tagColors = {
   accommodation: "#FF5733",

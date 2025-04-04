@@ -33,10 +33,10 @@ client.connect()
                 resave: false,
                 saveUninitialized: false,
                 cookie: {
-                    secure: process.env.NODE_ENV === "production", // true in Railway
+                    secure: true,  
                     httpOnly: true,
-                    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Needed for cross-origin cookies
-                    maxAge: 24 * 60 * 60 * 1000, // 1 day
+                    sameSite: "none", 
+                    maxAge: 24 * 60 * 60 * 1000 
                   },
                    
             })

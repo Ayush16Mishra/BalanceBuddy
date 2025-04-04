@@ -3,7 +3,8 @@ import { Typography, Box, Paper, MenuItem, Select, FormControl, InputLabel } fro
 import { motion } from "framer-motion";
 import axios from "axios";
 const API_BASE = import.meta.env.VITE_API_URL;
-
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "https://balancebuddy-production.up.railway.app"; // optional
 const CardContainer = ({ title, children }) => (
   <Paper
     elevation={4}

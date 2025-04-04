@@ -17,7 +17,8 @@ import Groups from "./Groups";
 import ChartSelector from "./BudgetGraph";
 import Profile from "./Profile";
 const API_BASE = import.meta.env.VITE_API_URL;
-
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "https://balancebuddy-production.up.railway.app"; // optional
 const drawerWidth = 240;
 
 const menuItems = [

@@ -4,7 +4,8 @@ import { useParams } from "react-router-dom";
 import { Typography, Box, Paper, Button } from "@mui/material";
 import { motion } from "framer-motion";
 const API_BASE = import.meta.env.VITE_API_URL;
-
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "https://balancebuddy-production.up.railway.app"; // optional
 const LoanCard = ({ loan, onResolve }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
