@@ -35,10 +35,19 @@ module.exports=(passport,pool)=>{
             res.status(500).json({ message: "Server error" });
         }
     });
-    router.post("/login", passport.authenticate("local"), (req, res) => {
-        console.log("Logged in user:", req.user);
-        res.json({ message: "Login successful", user: req.user });
-    });
+    router.post("/login", (req, res, next) => {
+        passport.authenticate("local", (err, user, info) => {
+          if (err) return next(err);
+          if (!user) return res.status(401).json({ message: "Invalid credentials" });
+      
+          // 👇 This is what sets the session and cookie
+          req.login(user, (err) => {
+            if (err) return next(err);
+            console.log("✅ Logged in user:", req.user);
+            return res.json({ message: "Login successful", user: req.user });
+          });
+        })(req, res, next);
+      });
 
     router.get("/logout",(req,res,next)=>{
         req.logout((err)=>{
