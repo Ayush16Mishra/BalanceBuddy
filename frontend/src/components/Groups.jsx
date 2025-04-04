@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
 const API_BASE = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "https://balancebuddy-production.up.railway.app"; // optional
 
 
 const CardContainer = ({ title, children, fullWidth = false }) => (

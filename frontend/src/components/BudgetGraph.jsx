@@ -4,7 +4,6 @@ import axios from "axios";
 import { Button, ButtonGroup, Card, CardContent, Typography, Box, Paper } from "@mui/material";
 const API_BASE = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "https://balancebuddy-production.up.railway.app"; // optional
 const glassyStyle = {
   background: "rgba(255, 255, 255, 0.2)",
   backdropFilter: "blur(10px)",

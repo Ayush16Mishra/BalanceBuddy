@@ -18,7 +18,6 @@ import ChartSelector from "./BudgetGraph";
 import Profile from "./Profile";
 const API_BASE = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "https://balancebuddy-production.up.railway.app"; // optional
 const drawerWidth = 240;
 
 const menuItems = [
@@ -170,8 +169,8 @@ const DashboardLayout = () => {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/groups" element={<Groups />} />
-          <Route path="finance" element={<ChartSelector />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="/finance" element={<ChartSelector />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Box>
     </Box>
