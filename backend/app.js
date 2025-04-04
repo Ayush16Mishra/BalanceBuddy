@@ -44,6 +44,9 @@ app.use((req, res, next) => {
       cb();
     };
   }
+  if (req.session && typeof req.session.save !== "function") {
+    req.session.save = (cb) => cb(); // ← THIS fixes the new error
+  }
   next();
 });
 const passport = require("./config/passport")(pool);
