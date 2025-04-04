@@ -4,7 +4,7 @@ const { Pool } = require("pg");
 require("dotenv").config();
 const cors = require("cors");
 const bodyParser = require("body-parser");
-
+app.set('trust proxy', 1);
 
 
 const app = express();
@@ -52,6 +52,8 @@ app.use((req, res, next) => {
 const passport = require("./config/passport")(pool);
 app.use(passport.initialize());
 app.use(passport.session());
+
+
 
 // CORS configuration
 const allowedOrigins = [
