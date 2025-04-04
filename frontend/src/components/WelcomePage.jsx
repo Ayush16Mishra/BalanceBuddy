@@ -31,22 +31,22 @@ const features = [
   {
     title: "Effortless Bill Splitting",
     text: "Never worry about who owes what. BalanceBuddy ensures fair and transparent bill splitting among friends and groups.",
-    image: "./public/tt.jpg"
+    image: "/tt.jpg"
   },
   {
     title: "Sponsor a Friend's Spending",
     text: "Want to cover a friend’s cost? Easily sponsor someone's transactions with a single click and keep things fair.",
-    image: "./public/sponsor.jpg"
+    image: "/sponsor.jpg"
   },
   {
     title: "Smart Transaction Tagging",
     text: "Categorize your expenses with custom tags, making it easy to filter and track your spending habits.",
-    image: "./public/tt.jpg"
+    image: "/tt.jpg"
   },
   {
     title: "Powerful Spending Insights",
     text: "Visualize your financial health with intuitive graphs and analytics, helping you make smarter money decisions.",
-    image: "./public/chart2.jpg"  
+    image: "/chart2.jpg"  
   },
 ];
 
