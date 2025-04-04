@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import { Typography, Box, Paper, Button } from "@mui/material";
 import { motion } from "framer-motion";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const LoanCard = ({ loan, onResolve }) => (
   <motion.div
@@ -66,7 +67,7 @@ const LoansPage = () => {
   useEffect(() => {
     const fetchLoans = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/loans/${group_id}`, { withCredentials: true });
+        const response = await axios.get(`${API_BASE}/api/loans/${group_id}`, { withCredentials: true });
         console.log("API Response:", response.data);
         console.log("User ID:", response.data.user_id);
 
@@ -87,7 +88,7 @@ const LoansPage = () => {
 
   const handleResolve = async (debt_id) => {
     try {
-      await axios.put(`http://localhost:5000/api/loans/resolve/${debt_id}`, {}, { withCredentials: true });
+      await axios.put(`${API_BASE}/api/loans/resolve/${debt_id}`, {}, { withCredentials: true });
       setLoans(prevLoans => prevLoans.filter(loan => loan.debt_id !== debt_id));
     } catch (error) {
       console.error("Error resolving loan:", error);

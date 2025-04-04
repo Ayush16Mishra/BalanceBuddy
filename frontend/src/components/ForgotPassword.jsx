@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TextField, Button, Container, Typography, Box, Paper } from "@mui/material";
 import { motion } from "framer-motion";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -11,7 +12,7 @@ function ForgotPasswordPage() {
     setMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/forgotPassword", {
+      const response = await fetch(`${API_BASE}/api/auth/forgotPassword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

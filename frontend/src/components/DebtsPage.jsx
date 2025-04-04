@@ -3,6 +3,7 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import { Typography, Box, Paper, Button } from "@mui/material";
 import { motion } from "framer-motion";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const DebtCard = ({ debt, onPay }) => (
   <motion.div
@@ -60,7 +61,7 @@ const DebtsPage = () => {
   useEffect(() => {
     const fetchDebts = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/debts/${group_id}`, { withCredentials: true });
+        const response = await axios.get(`${API_BASE}/api/debts/${group_id}`, { withCredentials: true });
         console.log("API Response:", response.data);
 
         if (!response.data || !Array.isArray(response.data.debts)) {
@@ -78,7 +79,7 @@ const DebtsPage = () => {
 
   const handlePay = async (debt_id, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/debts/pay/${debt_id}`, 
+      await axios.put(`${API_BASE}/api/debts/pay/${debt_id}`, 
         { status: newStatus },  
         { withCredentials: true }
       );

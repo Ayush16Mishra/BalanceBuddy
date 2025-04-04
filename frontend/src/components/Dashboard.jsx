@@ -16,6 +16,7 @@ import DashboardPage from "./DashboardPage";
 import Groups from "./Groups";
 import ChartSelector from "./BudgetGraph";
 import Profile from "./Profile";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const drawerWidth = 240;
 
@@ -73,7 +74,7 @@ const DashboardLayout = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/groups/notifications", { withCredentials: true });
+        const response = await axios.get(`${API_BASE}/api/groups/notifications`, { withCredentials: true });
         setNotifications(response.data);
       } catch (error) {
         console.error("Error fetching notifications:", error);

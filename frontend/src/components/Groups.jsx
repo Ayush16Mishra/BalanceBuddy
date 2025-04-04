@@ -5,8 +5,9 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
+const API_BASE = import.meta.env.VITE_API_URL;
 
-const API_BASE_URL = "http://localhost:5000/api/groups";
+
 
 const CardContainer = ({ title, children, fullWidth = false }) => (
   <Paper
@@ -42,7 +43,7 @@ const Groups = () => {
   useEffect(() => {
     const fetchJoinedGroups = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/joined`, { withCredentials: true });
+        const response = await axios.get(`${API_BASE}/api/groups/joined`, { withCredentials: true });
         setJoinedGroups(response.data.groups);
         setUserId(response.data.userId );
       } catch (error) {
@@ -55,7 +56,7 @@ const Groups = () => {
   const handleCreateGroup = async () => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/create`,
+        `${API_BASE}/api/groups/create`,
         { groupName },
         { withCredentials: true }
       );
@@ -72,7 +73,7 @@ const Groups = () => {
   const handleJoinGroup = async () => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/join`,
+        `${API_BASE}/api/groups/join`,
         { groupId },
         { withCredentials: true }
       );
@@ -87,7 +88,7 @@ const Groups = () => {
 
   const handleDeleteGroup = async (group_id) => {
     try {
-      await axios.patch(`${API_BASE_URL}/delete/${group_id}`, {}, { withCredentials: true });
+      await axios.patch(`${API_BASE}/api/groups/delete/${group_id}`, {}, { withCredentials: true });
 
       // Remove the deleted group from the state
       setJoinedGroups((prevGroups) => prevGroups.filter(group => group.group_id !== group_id));

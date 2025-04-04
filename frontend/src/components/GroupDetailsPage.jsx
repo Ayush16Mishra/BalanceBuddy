@@ -5,6 +5,7 @@ import { Typography, Box, Paper, Button, TextField, Dialog, DialogTitle, DialogC
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 
 const tagColors = {
@@ -37,7 +38,7 @@ const GroupDetailsPage = () => {
     
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/transactions/add",
+        `${API_BASE}/api/transactions/add`,
         {
           group_id,
           amount: parseFloat(amount),
@@ -63,7 +64,7 @@ const GroupDetailsPage = () => {
   const fetchGroupMembers = async () =>{
     try{
       const response = await axios.get(
-        `http://localhost:5000/api/transactions/${group_id}/members`,
+      `${API_BASE}/api/transactions/${group_id}/members`,
         {withCredentials : true}
       );
       console.log("Group members :",response.data);
@@ -79,7 +80,7 @@ const GroupDetailsPage = () => {
   const fetchTransactions = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/transactions/${group_id}`,
+        `${API_BASE}/api/transactions/${group_id}`,
         { withCredentials: true }
       );
 
@@ -102,7 +103,7 @@ const GroupDetailsPage = () => {
   const fetchGroupBudget = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/groups/${group_id}/budget`,
+        `${API_BASE}/api/groups/${group_id}/budget`,
         { withCredentials: true }
       );
       setBudget(response.data.budget);
@@ -114,7 +115,7 @@ const GroupDetailsPage = () => {
   const updateBudget = async () => {
     try {
       await axios.put(
-        `http://localhost:5000/api/groups/${group_id}/budget`,
+        `${API_BASE}/api/groups/${group_id}/budget`,
         { budget: parseFloat(budget) },
         { withCredentials: true }
       );

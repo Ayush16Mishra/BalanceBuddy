@@ -3,6 +3,7 @@ import { Typography, Box, Paper, Button, TextField } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const CardContainer = ({ title, children }) => (
   <Paper
@@ -37,7 +38,7 @@ const Profile = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/auth/profile", { withCredentials: true })
+      .get(`${API_BASE}/api/auth/profile`, { withCredentials: true })
       .then((response) => {
         setUser(response.data);
         setUsername(response.data.username);
@@ -51,7 +52,7 @@ const Profile = () => {
 
   const handleSave = () => {
     axios
-      .put("http://localhost:5000/api/auth/profile", { username, email }, { withCredentials: true })
+      .put(`${API_BASE}/api/auth/profile`, { username, email }, { withCredentials: true })
       .then((response) => {
         setUser(response.data);
         setIsEditing(false);

@@ -51,7 +51,7 @@ app.use(passport.session());
 
 app.use(
     cors({
-        origin: "http://localhost:3000", // Allow requests only from your frontend URL
+        origin: "https://balance-buddy-uyq4aq4pp-ayush-mishras-projects-6e8c1469.vercel.app", // Allow requests only from your frontend URL
         credentials: true, // Allow cookies and authentication headers
     })
 );

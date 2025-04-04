@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {PieChart, Pie,Cell,  BarChart,Bar,LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import axios from "axios";
 import { Button, ButtonGroup, Card, CardContent, Typography, Box, Paper } from "@mui/material";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const glassyStyle = {
   background: "rgba(255, 255, 255, 0.2)",
@@ -25,7 +26,7 @@ function SpendingVsTripsChart() {
   useEffect(() => {
     const fetchTrips = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/charts/trips", { withCredentials: true });
+        const response = await axios.get(`${API_BASE}/api/charts/trips`, { withCredentials: true });
         if (Array.isArray(response.data)) {
           setTripData(response.data.map((trip, index) => ({
             name: trip.name || `Trip ${index + 1}`,
@@ -63,7 +64,7 @@ function SpendingVsBudgetChart() {
   useEffect(() => {
     const fetchTrips = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/charts/trips", { withCredentials: true });
+        const response = await axios.get(`${API_BASE}/api/charts/trips`, { withCredentials: true });
         if (Array.isArray(response.data)) {
           setTripData(response.data.map((trip, index) => ({
             name: trip.name || `Trip ${index + 1}`,
@@ -101,7 +102,7 @@ function SpendingByCategoryChart() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/charts/spending-by-category", {
+        const response = await axios.get(`${API_BASE}/api/charts/spending-by-category`, {
           withCredentials: true,
         });
         if (Array.isArray(response.data)) {

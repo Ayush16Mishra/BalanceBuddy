@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Typography, Box, Paper, MenuItem, Select, FormControl, InputLabel } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
+const API_BASE = import.meta.env.VITE_API_URL;
+
 const CardContainer = ({ title, children }) => (
   <Paper
     elevation={4}
@@ -36,7 +38,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/groups/get_groups", { withCredentials: true });
+        const response = await axios.get(`${API_BASE}/api/groups/get_groups`, { withCredentials: true });
     
         if (Array.isArray(response.data)) {
           setGroups(response.data);
@@ -60,7 +62,7 @@ const DashboardPage = () => {
 
     const fetchStats = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/groups/${selectedGroup}/stats`, { withCredentials: true });
+        const response = await axios.get(`${API_BASE}/api/groups/${selectedGroup}/stats`, { withCredentials: true });
 
         setStats(response.data);
       } catch (error) {
@@ -74,7 +76,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const fetchOverallStats = async () => {
         try {
-            const response = await axios.get("http://localhost:5000/api/groups/overall_stats", { withCredentials: true });
+            const response = await axios.get(`${API_BASE}/api/groups/overall_stats`, { withCredentials: true });
 
             // Check if response has valid data
             if (response.data && response.data.totalLoans !== undefined && response.data.totalDebts !== undefined) {

@@ -2,6 +2,7 @@ import React from "react";
 import { AppBar, Tabs, Tab, Toolbar, Box, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Outlet, useNavigate, useLocation ,useParams} from "react-router-dom";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const GroupLayout = () => {
   const navigate = useNavigate();
