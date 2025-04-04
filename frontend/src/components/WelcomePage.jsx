@@ -31,18 +31,22 @@ const features = [
   {
     title: "Effortless Bill Splitting",
     text: "Never worry about who owes what. BalanceBuddy ensures fair and transparent bill splitting among friends and groups.",
+    image: "./public/tt.jpg"
   },
   {
     title: "Sponsor a Friend's Spending",
     text: "Want to cover a friend’s cost? Easily sponsor someone's transactions with a single click and keep things fair.",
+    image: "./public/sponsor.jpg"
   },
   {
     title: "Smart Transaction Tagging",
     text: "Categorize your expenses with custom tags, making it easy to filter and track your spending habits.",
+    image: "./public/tt.jpg"
   },
   {
     title: "Powerful Spending Insights",
     text: "Visualize your financial health with intuitive graphs and analytics, helping you make smarter money decisions.",
+    image: "./public/chart2.jpg"  
   },
 ];
 
@@ -127,14 +131,28 @@ const WelcomePage = () => {
               </motion.div>
             </Grid>
             <Grid item xs={12} md={6} order={{ xs: 1, md: index % 2 === 0 ? 2 : 1 }}>
-              <motion.div
-                initial={{ opacity: 0, x: index % 2 === 0 ? 50 : -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              >
-                <img src="/sibg.jpg" alt={feature.title} width="100%" style={{ borderRadius: "8px" }} />
-              </motion.div>
-            </Grid>
+  <motion.div
+    initial={{ opacity: 0, x: index % 2 === 0 ? 50 : -50 }}
+    whileInView={{ opacity: 1, x: 0 }}
+    transition={{ duration: 1, ease: "easeOut" }}
+  >
+    <Box
+      component="img"
+      src={feature.image} // Uses the placeholder images from the array
+      alt={feature.title}
+      sx={{
+        width: "100%",
+        maxWidth: "400px",
+        height: "250px",
+        objectFit: "cover",
+        borderRadius: "8px",
+        display: "block",
+        mx: "auto",
+        boxShadow: 3, // Adds a subtle shadow for a cleaner look
+      }}
+    />
+  </motion.div>
+</Grid>
           </Grid>
         ))}
       </Container>
