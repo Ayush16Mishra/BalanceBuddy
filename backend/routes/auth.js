@@ -8,7 +8,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-module.exports=(passport,client)=>{
+module.exports=(passport,pool)=>{
 
     router.post('/signup',async(req,res)=>{
         const{username,email,password,confirmPassword}=req.body;
@@ -22,13 +22,13 @@ module.exports=(passport,client)=>{
             return res.status(400).json({ message: "Passwords do not match" });
         }
         try{
-            const users = await client.query("SELECT * FROM users WHERE username=$1",[username]);
+            const users = await pool.query("SELECT * FROM users WHERE username=$1",[username]);
             if(users.rows.length>0){
                 console.log("username already exists");
                 return res.status(400).json({ message: "Username already exists" });
             }
             const hashedPassword= await bcrypt.hash(password,10);
-            await client.query("INSERT INTO users(username,email,password,created_at)VALUES($1,$2,$3,NOW())",[username,email,hashedPassword]);
+            await pool.query("INSERT INTO users(username,email,password,created_at)VALUES($1,$2,$3,NOW())",[username,email,hashedPassword]);
             res.status(201).json({ message: "Signup successful" });
         }catch(err){
             console.error(err);
@@ -61,7 +61,7 @@ module.exports=(passport,client)=>{
         const { email } = req.body;
 
         try {
-            const user = await client.query("SELECT * FROM users WHERE email=$1", [email]);
+            const user = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
             if (user.rows.length === 0) {
                 return res.status(404).json({ message: "User not found." });
             }
@@ -100,14 +100,14 @@ module.exports=(passport,client)=>{
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await client.query("SELECT * FROM users WHERE id=$1", [decoded.id]);
+            const user = await pool.query("SELECT * FROM users WHERE id=$1", [decoded.id]);
 
             if (user.rows.length === 0) {
                 return res.status(404).json({ message: "User not found." });
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
-            await client.query("UPDATE users SET password=$1 WHERE id=$2", [hashedPassword, decoded.id]);
+            await pool.query("UPDATE users SET password=$1 WHERE id=$2", [hashedPassword, decoded.id]);
 
             res.json({ message: "Password reset successful!" });
         } catch (error) {
@@ -122,7 +122,7 @@ module.exports=(passport,client)=>{
         }
     
         try {
-            const user = await client.query("SELECT username, email, created_at FROM users WHERE user_id=$1", [req.user.user_id]);
+            const user = await pool.query("SELECT username, email, created_at FROM users WHERE user_id=$1", [req.user.user_id]);
     
             if (user.rows.length === 0) {
                 return res.status(404).json({ message: "User not found" });
@@ -147,15 +147,15 @@ module.exports=(passport,client)=>{
         }
     
         try {
-            const existingUser = await client.query("SELECT * FROM users WHERE username=$1 AND user_id != $2", [username, req.user.user_id]);
+            const existingUser = await pool.query("SELECT * FROM users WHERE username=$1 AND user_id != $2", [username, req.user.user_id]);
     
             if (existingUser.rows.length > 0) {
                 return res.status(400).json({ message: "Username already taken." });
             }
     
-            await client.query("UPDATE users SET username=$1, email=$2 WHERE user_id=$3", [username, email, req.user.user_id]);
+            await pool.query("UPDATE users SET username=$1, email=$2 WHERE user_id=$3", [username, email, req.user.user_id]);
     
-            const updatedUser = await client.query("SELECT username, email, created_at FROM users WHERE user_id=$1", [req.user.user_id]);
+            const updatedUser = await pool.query("SELECT username, email, created_at FROM users WHERE user_id=$1", [req.user.user_id]);
     
             res.json(updatedUser.rows[0]);
         } catch (error) {

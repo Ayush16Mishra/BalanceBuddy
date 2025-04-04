@@ -3,7 +3,7 @@ const router = express.Router();
 
 
 
-module.exports = (client)=>{
+module.exports = (pool)=>{
 // Get trips (groups) with spending for the logged-in user
 router.get("/trips", async (req, res) => {
     console.log("Authenticated:", req.isAuthenticated()); // Debugging
@@ -16,7 +16,7 @@ router.get("/trips", async (req, res) => {
     const userId = req.user?.user_id; // Logged-in user's ID
 
     try {
-      const result=await client.query( `
+      const result=await pool.query( `
         SELECT g.group_id, g.name, ug.joined_at AS created_at, ug.total_spent AS spending,ug.budget
         FROM user_groups ug
         JOIN groups g ON ug.group_id = g.group_id
@@ -39,7 +39,7 @@ router.get("/trips", async (req, res) => {
     const userId = req.user?.user_id;
 
     try {
-        const result = await client.query(`
+        const result = await pool.query(`
             SELECT t.tag, SUM(t.amount) AS total_spent
             FROM transactions t
             JOIN user_groups ug ON t.group_id = ug.group_id

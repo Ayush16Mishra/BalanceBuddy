@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-module.exports = (client) => {
+module.exports = (pool) => {
     // ✅ Get all loans provided by the logged-in user for a specific group
     router.get("/:group_id", async (req, res) => {
         console.log("Authenticated User in Loans Route:", req.user);
@@ -14,7 +14,7 @@ module.exports = (client) => {
 
        
         try {
-            const result = await client.query(
+            const result = await pool.query(
                 `SELECT d.*, u.username AS borrower
                  FROM debts d
                  JOIN users u ON d.borrower_id = u.user_id
@@ -39,10 +39,10 @@ module.exports = (client) => {
         const lender_id = req.user?.user_id;
     
         try {
-            await client.query("BEGIN"); // Start transaction
+            await pool.query("BEGIN"); // Start transaction
     
             // ✅ Get debt details before updating
-            const debtResult = await client.query(
+            const debtResult = await pool.query(
                 `SELECT borrower_id, group_id, amount 
                  FROM debts 
                  WHERE debt_id = $1 AND lender_id = $2 AND status = 'in process'`,
@@ -56,7 +56,7 @@ module.exports = (client) => {
             const { borrower_id, group_id, amount } = debtResult.rows[0];
     
             // ✅ Mark debt as resolved
-            await client.query(
+            await pool.query(
                 `UPDATE debts 
                  SET status = 'resolved' 
                  WHERE debt_id = $1`,
@@ -64,7 +64,7 @@ module.exports = (client) => {
             );
     
             // ✅ Decrease `total_owed` for the borrower
-            await client.query(
+            await pool.query(
                 `UPDATE user_groups 
                  SET total_owed = COALESCE((
                     SELECT SUM(amount) 
@@ -77,7 +77,7 @@ module.exports = (client) => {
             );
     
             // ✅ Decrease `total_loaned` for the lender
-            await client.query(
+            await pool.query(
                 `UPDATE user_groups 
                  SET total_loaned = COALESCE((
                     SELECT SUM(amount) 
@@ -89,11 +89,11 @@ module.exports = (client) => {
                 [lender_id, group_id]
             );
     
-            await client.query("COMMIT"); // Commit transaction
+            await pool.query("COMMIT"); // Commit transaction
     
             res.json({ message: "Loan resolved successfully", debt_id, lender_id, borrower_id });
         } catch (err) {
-            await client.query("ROLLBACK"); // Rollback on error
+            await pool.query("ROLLBACK"); // Rollback on error
             console.error("Error resolving loan:", err);
             res.status(500).json({ message: "Server error" });
         }

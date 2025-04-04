@@ -1,7 +1,7 @@
 //app.js
 const express= require("express");
 const session= require("express-session");
-const {Client}=require("pg");
+const {Pool}=require("pg");
 require("dotenv").config();
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -13,20 +13,20 @@ const PORT=5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const client = new Client({
+const pool = new Pool({
     connectionString: process.env.DATABASE_URL, 
     ssl: { rejectUnauthorized: false }  
 });
 
 
-client.connect()
+pool.connect()
           .then(()=>console.log("Connected to postgress"))
           .catch(err=>console.error("Connection errot",err.stack));
 
           app.use(
             session({
                 store: new pgSession({
-                    conString: process.env.DATABASE_URL,
+                    pool: pool,
                     tableName: "session", // Optional: specify a session table name
                 }),     
                 name: "connect.sid", // ✅ optional but recommended
@@ -44,13 +44,13 @@ client.connect()
         );
 
         
-const passport=require("./config/passport")(client);
-const authRoutes = require("./routes/auth")(passport, client);
-const groupRoutes = require("./routes/groups")(client);
-const transactionRoutes = require("./routes/transactions")(client);
-const loansRoutes=require("./routes/loans")(client);
-const debtsRoutes=require("./routes/debts")(client);
-const chartRoutes=require("./routes/charts")(client);
+const passport=require("./config/passport")(pool);
+const authRoutes = require("./routes/auth")(passport, pool);
+const groupRoutes = require("./routes/groups")(pool);
+const transactionRoutes = require("./routes/transactions")(pool);
+const loansRoutes=require("./routes/loans")(pool);
+const debtsRoutes=require("./routes/debts")(pool);
+const chartRoutes=require("./routes/charts")(pool);
 
 
 app.use(passport.initialize());

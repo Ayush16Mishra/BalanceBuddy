@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 
-module.exports = (client) => {
+module.exports = (pool) => {
     router.post("/create", async (req, res) => {
         console.log("Authenticated:", req.isAuthenticated()); // Debugging
         console.log("User:", req.user); // Debugging
@@ -20,7 +20,7 @@ module.exports = (client) => {
         }
 
         try {
-            const result = await client.query(
+            const result = await pool.query(
                 "INSERT INTO groups (name, created_by, created_at) VALUES ($1, $2, CURRENT_TIMESTAMP) RETURNING group_id",
                 [groupName, userId]
             );
@@ -28,7 +28,7 @@ module.exports = (client) => {
             const groupId = result.rows[0].group_id;
             
             // Add the creator as the first member of the group
-            await client.query(
+            await pool.query(
                 "INSERT INTO user_groups (user_id, group_id, total_spent, total_loaned, total_owed, joined_at) VALUES ($1, $2, 0.00, 0.00, 0.00, CURRENT_TIMESTAMP)",
                 [userId, groupId]
             );
@@ -57,13 +57,13 @@ module.exports = (client) => {
 
         try {
             // Check if the group exists
-            const groupCheck = await client.query("SELECT group_id FROM groups WHERE group_id = $1", [groupId]);
+            const groupCheck = await pool.query("SELECT group_id FROM groups WHERE group_id = $1", [groupId]);
             if (groupCheck.rowCount === 0) {
                 return res.status(404).json({ message: "Group not found." });
             }
 
             // Check if the user is already a member
-            const membershipCheck = await client.query(
+            const membershipCheck = await pool.query(
                 "SELECT * FROM user_groups WHERE user_id = $1 AND group_id = $2", 
                 [userId, groupId]
             );
@@ -72,7 +72,7 @@ module.exports = (client) => {
             }
 
             // Add the user to the group
-            await client.query(
+            await pool.query(
                 "INSERT INTO user_groups (user_id, group_id, total_spent, total_loaned, total_owed, joined_at) VALUES ($1, $2, 0.00, 0.00, 0.00, CURRENT_TIMESTAMP)",
                 [userId, groupId]
             );
@@ -95,7 +95,7 @@ module.exports = (client) => {
         const userId = req.user?.user_id;
     
         try {
-            const result = await client.query(
+            const result = await pool.query(
                 `SELECT g.group_id, g.name ,g.created_by
                  FROM groups g
                  INNER JOIN user_groups ug ON g.group_id = ug.group_id
@@ -116,7 +116,7 @@ module.exports = (client) => {
         }
     
         try {
-            const result = await client.query(
+            const result = await pool.query(
                 `SELECT g.group_id, g.name AS group_name
                  FROM user_groups gm
                  JOIN groups g ON gm.group_id = g.group_id
@@ -140,7 +140,7 @@ module.exports = (client) => {
         const user_id = req.user.user_id;
     
         try {
-            const result = await client.query(
+            const result = await pool.query(
                 `SELECT total_spent AS "totalSpending", 
                         total_loaned AS "totalLoans", 
                         total_owed AS "totalDebts"
@@ -164,7 +164,7 @@ module.exports = (client) => {
         const user_id = req.user.user_id; // Assuming authentication middleware
       
         try {
-          const result = await client.query(
+          const result = await pool.query(
             "SELECT budget FROM user_groups WHERE group_id = $1 AND user_id = $2",
             [group_id, user_id]
           );
@@ -179,7 +179,7 @@ module.exports = (client) => {
         const user_id = req.user.user_id; // Assuming authentication middleware
       
         try {
-          await client.query(
+          await pool.query(
             "UPDATE user_groups SET budget = $1 WHERE group_id = $2 AND user_id = $3",
             [budget, group_id, user_id]
           );
@@ -195,13 +195,13 @@ module.exports = (client) => {
         const userId = req.user.user_id; // Ensure authentication middleware sets this
     
         // Check if the user is the creator
-        const group = await client.query("SELECT created_by FROM groups WHERE group_id = $1", [group_id]);
+        const group = await pool.query("SELECT created_by FROM groups WHERE group_id = $1", [group_id]);
         if (group.rows.length === 0 || group.rows[0].created_by !== userId) {
             return res.status(403).json({ message: "Unauthorized to delete this group" });
         }
     
         // Soft delete
-        await client.query("UPDATE groups SET is_deleted = TRUE WHERE group_id = $1", [group_id]);
+        await pool.query("UPDATE groups SET is_deleted = TRUE WHERE group_id = $1", [group_id]);
     
         res.json({ message: "Group deleted successfully" });
     });
@@ -216,7 +216,7 @@ router.get("/overall_stats", async (req, res) => {
         const userId = req.user.user_id; // Assuming user_id is stored in req.user after authentication
 
         // Get total loans and debts for the user (excluding resolved debts)
-        const statsQuery = await client.query(
+        const statsQuery = await pool.query(
             `SELECT 
                 COALESCE(SUM(CASE WHEN lender_id = $1 THEN amount ELSE 0 END), 0) AS "totalLoans",
                 COALESCE(SUM(CASE WHEN borrower_id = $1 THEN amount ELSE 0 END), 0) AS "totalDebts"
@@ -246,7 +246,7 @@ router.get("/notifications", async (req, res) => {
         const userId = req.user.user_id;
 
         // Fetch unresolved debts (group resolve requests) for groups the user is part of
-        const notificationsQuery = await client.query(
+        const notificationsQuery = await pool.query(
             `SELECT d.debt_id, d.group_id, g.name 
             FROM debts d
             JOIN groups g ON d.group_id = g.group_id

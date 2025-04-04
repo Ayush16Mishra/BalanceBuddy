@@ -1,7 +1,7 @@
 //transactions.js
 const express = require("express");
 const router = express.Router();
-module.exports = (client) => {
+module.exports = (pool) => {
     router.post("/add", async (req, res) => {
         if (!req.isAuthenticated()) {
             return res.status(401).json({ message: "Unauthorized. Please log in." });
@@ -15,17 +15,17 @@ module.exports = (client) => {
         }
     
         try {
-            await client.query("BEGIN"); // Start transaction
+            await pool.query("BEGIN"); // Start transaction
     
             // Get user IDs of sponsored users from usernames
-            const sponsorQuery = await client.query(
+            const sponsorQuery = await pool.query(
                 `SELECT user_id FROM users WHERE username = ANY($1)`,
                 [sponsors]
             );
             const sponsoredUserIds = sponsorQuery.rows.map(row => row.user_id);
     
             // Insert transaction
-            const transactionResult = await client.query(
+            const transactionResult = await pool.query(
                 `INSERT INTO transactions (group_id, user_id, amount, reason,tag, created_at) 
                  VALUES ($1, $2, $3, $4,$5, CURRENT_TIMESTAMP) 
                  RETURNING transaction_id`,
@@ -35,7 +35,7 @@ module.exports = (client) => {
             const transaction_id = transactionResult.rows[0].transaction_id;
     
             // Get all group members except the payer
-            const groupUsers = await client.query(
+            const groupUsers = await pool.query(
                 `SELECT ug.user_id FROM user_groups ug
                  WHERE ug.group_id = $1 AND ug.user_id != $2`,
                 [group_id, lender_id]
@@ -52,7 +52,7 @@ module.exports = (client) => {
     
             // Insert debts
             const debtQueries = debtors.map(debtor =>
-                client.query(
+                pool.query(
                     `INSERT INTO debts (transaction_id, group_id, lender_id, borrower_id, amount, status, sponsored, created_at) 
                      VALUES ($1, $2, $3, $4, $5, 'unresolved', $6, CURRENT_TIMESTAMP)`,
                     [
@@ -71,7 +71,7 @@ module.exports = (client) => {
 const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
 
 // Update total_spent & total_loaned for the lender (logged-in user)
-await client.query(
+await pool.query(
     `UPDATE user_groups 
      SET total_spent = total_spent + $1,
          total_loaned = COALESCE((
@@ -87,12 +87,12 @@ await client.query(
 // Update total_spent & total_owed for each non-sponsored borrower
 const debtUpdates = debtors
     .filter(debtor => !debtor.sponsored) // Only update non-sponsored borrowers
-    .map(debtor => client.query(
+    .map(debtor => pool.query(
         `UPDATE user_groups 
          SET total_spent = total_spent + $1
          WHERE user_id = $2 AND group_id = $3`,
         [shareAmount, debtor.user_id, group_id]
-    ).then(() => client.query(
+    ).then(() => pool.query(
         `UPDATE user_groups 
          SET total_owed = COALESCE((
             SELECT SUM(amount) 
@@ -107,11 +107,11 @@ const debtUpdates = debtors
 await Promise.all(debtUpdates);
 
     
-            await client.query("COMMIT"); // Commit transaction
+            await pool.query("COMMIT"); // Commit transaction
     
             res.status(201).json({ message: "Transaction and debts added successfully", transactionId: transaction_id });
         } catch (err) {
-            await client.query("ROLLBACK"); // Rollback on error
+            await pool.query("ROLLBACK"); // Rollback on error
             console.error("Error adding transaction and debts:", err);
             res.status(500).json({ message: "Server error" });
         }
@@ -126,7 +126,7 @@ await Promise.all(debtUpdates);
         const { group_id } = req.params;
     
         try {
-            const result = await client.query(
+            const result = await pool.query(
                 `SELECT t.transaction_id, u.username, t.amount, t.reason,t.tag, t.created_at
                  FROM transactions t
                  JOIN users u ON t.user_id = u.user_id
@@ -159,7 +159,7 @@ await Promise.all(debtUpdates);
         const { group_id } = req.params;
     
         try {
-            const result = await client.query(
+            const result = await pool.query(
                 `SELECT u.user_id, u.username 
                  FROM user_groups ug
                  JOIN users u ON ug.user_id = u.user_id

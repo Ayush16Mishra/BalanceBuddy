@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-module.exports = (client) => {
+module.exports = (pool) => {
     // ✅ Get all debts of the logged-in user for a specific group
     router.get("/:group_id", async (req, res) => {
         if (!req.isAuthenticated()) {
@@ -12,7 +12,7 @@ module.exports = (client) => {
         const borrower_id = req.user?.user_id;
 
         try {
-            const result = await client.query(
+            const result = await pool.query(
                 `SELECT d.*, u.username AS lender
                  FROM debts d
                  JOIN users u ON d.lender_id = u.user_id
@@ -39,7 +39,7 @@ module.exports = (client) => {
          console.log("Lender ID check:", debt_id);
 
         try {
-            const updateResult = await client.query(
+            const updateResult = await pool.query(
                 `UPDATE debts 
                  SET status = 'in process' 
                  WHERE debt_id = $1 AND borrower_id = $2 
