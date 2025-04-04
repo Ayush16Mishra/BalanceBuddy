@@ -49,7 +49,7 @@ const chartRoutes=require("./routes/charts")(client);
 app.use(passport.initialize());
 app.use(passport.session());
 const allowedOrigins = [
-    "https://balance-buddy-5r1ti57vq-ayush-mishras-projects-6e8c1469.vercel.app",
+    "https://balance-buddy-p5mmew0zl-ayush-mishras-projects-6e8c1469.vercel.app",
     "http://localhost:3000"
   ];
   app.use(
