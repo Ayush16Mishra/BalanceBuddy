@@ -1,0 +1,14 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: auto; /* Prevents scrollbars if unnecessary */
+  }
+  input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  box-shadow: 0 0 0px 1000px rgba(26, 26, 46, 0.9) inset !important;
+  -webkit-text-fill-color: white !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
