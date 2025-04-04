@@ -32,7 +32,13 @@ client.connect()
                 secret: process.env.SESSION_SECRET || "secret_key",
                 resave: false,
                 saveUninitialized: false,
-                cookie: { secure: false, httpOnly: true, maxAge: 24 * 60 * 60 * 1000 } // 1-day expiration
+                cookie: {
+                    secure: process.env.NODE_ENV === "production", // true in Railway
+                    httpOnly: true,
+                    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Needed for cross-origin cookies
+                    maxAge: 24 * 60 * 60 * 1000, // 1 day
+                  },
+                   
             })
         );
 
@@ -49,7 +55,8 @@ const chartRoutes=require("./routes/charts")(client);
 app.use(passport.initialize());
 app.use(passport.session());
 const allowedOrigins = [
-    "https://balance-buddy-p5mmew0zl-ayush-mishras-projects-6e8c1469.vercel.app",
+    "https://balance-buddy-ijcrz5req-ayush-mishras-projects-6e8c1469.vercel.app",
+    "https://balance-buddy-ruddy.vercel.app",
     "http://localhost:3000"
   ];
   app.use(
