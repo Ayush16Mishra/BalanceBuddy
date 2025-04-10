@@ -17,7 +17,7 @@ import ForgotPasswordPage from "./components/ForgotPassword";
 import ResetPasswordPage from "./components/ResetPasswordPage";
 import ChartSelector from "./components/BudgetGraph";
 import Profile from "./components/Profile";
-
+import AdminDashboard from "./components/Admin";
 
 const darkTheme = createTheme({
   palette: {
@@ -94,6 +94,7 @@ function App() {
           <Route path="groups" element={<Groups />} />
           <Route path="finance" element={<ChartSelector/>}/>
           <Route path="profile" element={<Profile />} />
+          <Route path="admin" element={<AdminDashboard />} />
         </Route>
       </Routes>
     </Router>

@@ -16,18 +16,19 @@ import DashboardPage from "./DashboardPage";
 import Groups from "./Groups";
 import ChartSelector from "./BudgetGraph";
 import Profile from "./Profile";
+import AdminDashboard from "./Admin";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+ // ✅ You’ll set this from auth/session
+
 const API_BASE = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
 const drawerWidth = 240;
 
-const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-  { text: "Groups", icon: <GroupIcon />, path: "/dashboard/groups" },
-  { text: "Finance", icon: <AccountBalanceIcon />, path: "/dashboard/finance" },
-  { text: "Profile", icon: <PersonIcon />, path: "/dashboard/profile" }
-];
 
-const Sidebar = ({ open }) => (
+
+
+
+const Sidebar = ({ open, menuItems }) => (
   <Drawer
     variant="permanent"
     sx={{
@@ -69,6 +70,29 @@ const DashboardLayout = () => {
   const [notifications, setNotifications] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
+  const [userId, setUserId] = useState(null);
+useEffect(() => {
+  axios.get(`${API_BASE}/api/auth/check-auth`, { withCredentials: true })
+    .then((res) => {
+      if (res.data.isAuthenticated) {
+        setUserId(res.data.user.user_id);
+      }
+    })
+    .catch((err) => {
+      console.log("Not authenticated", err);
+    });
+}, []);
+
+const menuItems = [
+  { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
+  { text: "Groups", icon: <GroupIcon />, path: "/dashboard/groups" },
+  { text: "Finance", icon: <AccountBalanceIcon />, path: "/dashboard/finance" },
+  { text: "Profile", icon: <PersonIcon />, path: "/dashboard/profile" },
+  // ✅ Conditionally add Admin route
+  ...(userId === 2
+    ? [{ text: "Admin", icon: <AdminPanelSettingsIcon />, path: "/dashboard/admin" }]
+    : [])
+];
 
   // Fetch notifications
   useEffect(() => {
@@ -162,7 +186,7 @@ const DashboardLayout = () => {
         </Toolbar>
       </AppBar>
 
-      <Sidebar open={open} />
+      <Sidebar open={open} menuItems={menuItems} />
 
       <Box component="main" sx={{ flexGrow: 1, p: 3, marginLeft: open ? `${drawerWidth}px` : "56px", position: "relative", zIndex: 2 }}>
         <Toolbar />
@@ -171,6 +195,7 @@ const DashboardLayout = () => {
           <Route path="/groups" element={<Groups />} />
           <Route path="/finance" element={<ChartSelector />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </Box>
     </Box>

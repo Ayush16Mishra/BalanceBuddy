@@ -103,23 +103,52 @@ const DashboardPage = () => {
 
       {/* Group Selection */}
       <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
-  <FormControl 
-    sx={{ 
-      minWidth: 250, 
-      backgroundColor: "rgba(255, 255, 255, 0.1)", 
-      borderRadius: 2, 
-      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)"
+  <FormControl
+    variant="outlined"
+    sx={{
+      minWidth: 250,
+      backgroundColor: "rgba(255, 255, 255, 0.12)",
+      borderRadius: 3,
+      backdropFilter: "blur(8px)",
+      boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.1)",
     }}
   >
-    <InputLabel>Select Group</InputLabel>
+    <InputLabel
+      sx={{
+        color: "white",
+        fontWeight: "bold",
+        '&.Mui-focused': {
+          color: "#ffffff",
+        },
+      }}
+    >
+      Select Group
+    </InputLabel>
     <Select
       value={selectedGroup}
       onChange={(e) => setSelectedGroup(e.target.value)}
+      label="Select Group"
       sx={{
-        borderRadius: 2,
-        paddingY: 1,
-        "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-        "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" }
+        borderRadius: 3,
+        color: "white",
+        "& .MuiOutlinedInput-notchedOutline": {
+          border: "1px solid rgba(255, 255, 255, 0.3)",
+        },
+        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+          borderColor: "rgba(255, 255, 255, 0.6)",
+        },
+        "&:hover .MuiOutlinedInput-notchedOutline": {
+          borderColor: "rgba(255, 255, 255, 0.5)",
+        },
+        backgroundColor: "transparent",
+      }}
+      MenuProps={{
+        PaperProps: {
+          sx: {
+            backgroundColor: "#2a2a2a",
+            color: "white",
+          },
+        },
       }}
     >
       {groups.map((group) => (

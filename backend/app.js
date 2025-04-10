@@ -81,6 +81,7 @@ const transactionRoutes = require("./routes/transactions")(pool);
 const loansRoutes = require("./routes/loans")(pool);
 const debtsRoutes = require("./routes/debts")(pool);
 const chartRoutes = require("./routes/charts")(pool);
+const adminRoutes = require("./routes/admin")(pool);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/groups", groupRoutes);
@@ -88,6 +89,7 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/loans", loansRoutes);
 app.use("/api/debts", debtsRoutes);
 app.use("/api/charts", chartRoutes);
+app.use("/api/admin",adminRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

@@ -1,31 +1,38 @@
 import React, { useEffect, useState } from "react";
-import { Typography, Box, Paper, Button, TextField } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Paper,
+  Button,
+  TextField,
+  Stack,
+  Divider,
+} from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
 const API_BASE = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
+
 const CardContainer = ({ title, children }) => (
   <Paper
-    elevation={4}
+    elevation={5}
     sx={{
-      padding: 3,
-      borderRadius: 2,
-      minHeight: "150px",
-      backdropFilter: "blur(10px)",
-      background: "rgba(255, 255, 255, 0.15)",
+      p: 4,
+      borderRadius: 4,
+      backdropFilter: "blur(12px)",
+      background: "rgba(255, 255, 255, 0.2)",
       border: "1px solid rgba(255, 255, 255, 0.3)",
-      boxShadow: "0px 4px 10px rgba(0,0,0,0.2)",
       width: "100%",
       maxWidth: "600px",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      textAlign: "center",
     }}
   >
-    <Typography variant="h5" fontWeight="bold">{title}</Typography>
-    <Box sx={{ mt: 1 }}>{children}</Box>
+    <Typography variant="h5" fontWeight="bold" gutterBottom>
+      {title}
+    </Typography>
+    <Divider sx={{ mb: 2 }} />
+    <Box>{children}</Box>
   </Paper>
 );
 
@@ -38,7 +45,7 @@ const Profile = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_BASE}/api/auth/profile`, { withCredentials: true })
+      .get(`${API_BASE}/api/auth/profile`)
       .then((response) => {
         setUser(response.data);
         setUsername(response.data.username);
@@ -52,7 +59,11 @@ const Profile = () => {
 
   const handleSave = () => {
     axios
-      .put(`${API_BASE}/api/auth/profile`, { username, email }, { withCredentials: true })
+      .put(
+        `${API_BASE}/api/auth/profile`,
+        { username, email },
+        { withCredentials: true }
+      )
       .then((response) => {
         setUser(response.data);
         setIsEditing(false);
@@ -62,67 +73,144 @@ const Profile = () => {
       });
   };
 
-  if (!user) return <Typography>Loading...</Typography>;
+  const hasChanges =
+    username !== user?.username || email !== user?.email;
+
+  if (!user)
+    return (
+      <Typography textAlign="center" mt={5}>
+        Loading...
+      </Typography>
+    );
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2 }}>
-      <Typography variant="h4" fontWeight="bold" sx={{ mb: 3, textAlign: "center" }}>
-        Profile
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1 }}
+    >
+      <Typography
+        variant="h4"
+        fontWeight="bold"
+        textAlign="center"
+        mb={4}
+      >
+        My Profile
       </Typography>
 
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-        <CardContainer title="User Details">
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        <CardContainer title="Account Information">
           {isEditing ? (
-            <>
+            <Stack spacing={2}>
               <TextField
                 label="Username"
+                variant="outlined"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 fullWidth
-                margin="dense"
               />
               <TextField
                 label="Email"
+                variant="outlined"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 fullWidth
-                margin="dense"
               />
-            </>
+            </Stack>
           ) : (
-            <>
-              <Typography variant="h6">Username: {user.username}</Typography>
-              <Typography variant="h6">Email: {user.email}</Typography>
-            </>
+            <Stack spacing={1}>
+              <Typography variant="body1">
+                <strong>Username:</strong> {user.username}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Email:</strong> {user.email}
+              </Typography>
+            </Stack>
           )}
-          <Typography variant="h6">Joined on: {new Date(user.created_at).toLocaleDateString()}</Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mt: 2, display: "block" }}
+          >
+            Joined on: {new Date(user.created_at).toLocaleDateString()}
+          </Typography>
         </CardContainer>
 
-        {isEditing ? (
-          <Button
-            variant="contained"
-            sx={{ mt: 2, backgroundColor: "rgba(0, 200, 0, 0.7)", color: "white" }}
-            onClick={handleSave}
-          >
-            Save Changes
-          </Button>
-        ) : (
-          <Button
-            variant="contained"
-            sx={{ mt: 2, backgroundColor: "rgba(255, 255, 255, 0.3)", color: "black" }}
-            onClick={() => setIsEditing(true)}
-          >
-            Edit Profile
-          </Button>
-        )}
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 2 }}>
+  {isEditing ? (
+    <Button
+      onClick={handleSave}
+      sx={{
+        textTransform: "none",
+        px: 4,
+        py: 1.5,
+        borderRadius: 3,
+        fontWeight: "bold",
+        color: "#fff",
+        background: "rgba(25, 118, 210, 0.3)", // primary blue tone
+        backdropFilter: "blur(10px)",
+        border: "1px solid rgba(255, 255, 255, 0.3)",
+        boxShadow: "0px 4px 12px rgba(0,0,0,0.2)",
+        "&:hover": {
+          background: "rgba(25, 118, 210, 0.5)",
+        },
+      }}
+    >
+      Save Changes
+    </Button>
+  ) : (
+    <Button
+      onClick={() => setIsEditing(true)}
+      sx={{
+        textTransform: "none",
+        px: 4,
+        py: 1.5,
+        borderRadius: 3,
+        fontWeight: "bold",
+        color: "#fff",
+        background: "rgba(25, 118, 210, 0.3)", // primary blue tone
+        backdropFilter: "blur(10px)",
+        border: "1px solid rgba(255, 255, 255, 0.3)",
+        boxShadow: "0px 4px 12px rgba(0,0,0,0.2)",
+        "&:hover": {
+          background: "rgba(25, 118, 210, 0.5)",
+        },
+      }}
+    >
+      Edit Profile
+    </Button>
+  )}
 
-        <Button
-          variant="contained"
-          sx={{ mt: 2, backgroundColor: "rgba(255, 255, 255, 0.3)", color: "black" }}
-          onClick={() => navigate("/resetPassword")}
-        >
-          Reset Password
-        </Button>
+  <Button
+    onClick={() => navigate("/resetPassword")}
+    sx={{
+      textTransform: "none",
+      px: 4,
+      py: 1.5,
+      borderRadius: 3,
+      fontWeight: "bold",
+      color: "#fff",
+      background: "rgba(156, 39, 176, 0.3)", // secondary purple tone
+      backdropFilter: "blur(10px)",
+      border: "1px solid rgba(255, 255, 255, 0.3)",
+      boxShadow: "0px 4px 12px rgba(0,0,0,0.2)",
+      "&:hover": {
+        background: "rgba(156, 39, 176, 0.5)",
+      },
+    }}
+  >
+    Reset Password
+  </Button>
+</Stack>
+
+
       </Box>
     </motion.div>
   );
