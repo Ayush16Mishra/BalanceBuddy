@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function LoginPage() {
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [isLeaving, setIsLeaving] = useState(false);
   
@@ -20,6 +21,7 @@ function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Start loading
     try {
       const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
@@ -39,6 +41,8 @@ function LoginPage() {
     } catch (error) {
       console.error("Login error:", error);
       alert("An error occurred. Please try again later.");
+    }finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -167,9 +171,14 @@ function LoginPage() {
                     "&:hover": { backgroundColor: "#7b1fa2" },
                   }}
                   fullWidth
-                >
-                  Log In
+                  disabled={loading}
+                > {loading ? "Logging in..." : "Log In"}
                 </Button>
+                {loading && (
+  <Typography variant="body2" sx={{ mt: 1, color: "#bb86fc" }}>
+    Please wait...
+  </Typography>
+)}
               </Box>
             </form>
 

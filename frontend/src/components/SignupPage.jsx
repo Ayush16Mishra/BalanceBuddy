@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function SignupPage() {
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [isLeaving, setIsLeaving] = useState(false);
 
@@ -21,7 +22,7 @@ function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true); // Start loading
     try {
       const response = await fetch(`${API_BASE}/api/auth/signup`, {
         method: "POST",
@@ -39,6 +40,8 @@ function SignupPage() {
     } catch (error) {
       console.error("Signup error:", error);
       alert("An error occurred");
+    }finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -191,9 +194,15 @@ function SignupPage() {
                     "&:hover": { backgroundColor: "#7b1fa2" },
                   }}
                   fullWidth
+                  disabled={loading}
                 >
-                  Sign Up
+                  {loading ? "Signing in..." : "Sign In"}
                 </Button>
+                {loading && (
+                    <Typography variant="body2" sx={{ mt: 1, color: "#bb86fc" }}>
+                      Please wait...
+                    </Typography>
+                  )}
               </Box>
             </form>
 
