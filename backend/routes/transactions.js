@@ -6,7 +6,7 @@ module.exports = (pool) => {
         if (!req.isAuthenticated()) {
             return res.status(401).json({ message: "Unauthorized. Please log in." });
         }
-    
+        console.log("debug",req.body);
         const { group_id, amount, reason, sponsors = [],tag} = req.body;
         const lender_id = req.user?.user_id;
     
@@ -16,13 +16,15 @@ module.exports = (pool) => {
     
         try {
             await pool.query("BEGIN"); // Start transaction
-    
+            console.log("Transaction started...");
             // Get user IDs of sponsored users from usernames
             const sponsorQuery = await pool.query(
                 `SELECT user_id FROM users WHERE username = ANY($1)`,
                 [sponsors]
             );
             const sponsoredUserIds = sponsorQuery.rows.map(row => row.user_id);
+            console.log("Sponsored user IDs:", sponsoredUserIds);
+
     
             // Insert transaction
             const transactionResult = await pool.query(
@@ -33,23 +35,28 @@ module.exports = (pool) => {
             );
     
             const transaction_id = transactionResult.rows[0].transaction_id;
-    
+            console.log("Transaction ID:", transaction_id); // Log the transaction_id for validation
+
             // Get all group members except the payer
             const groupUsers = await pool.query(
                 `SELECT ug.user_id FROM user_groups ug
                  WHERE ug.group_id = $1 AND ug.user_id != $2`,
                 [group_id, lender_id]
             );
+            console.log("Group users (excluding lender):", groupUsers.rows);
     
             const debtors = groupUsers.rows.map(row => ({
                 user_id: row.user_id,
                 sponsored: sponsoredUserIds.includes(row.user_id), // Match user ID from sponsor list
             }));
-    
+            console.log("Debtors list:", debtors);
+
             // Calculate the share amount only for non-sponsored users
             const nonSponsoredUsers = debtors.filter(debtor => !debtor.sponsored);
+            console.log("Non-sponsored users:", nonSponsoredUsers);
+
             const shareAmount = amount / (nonSponsoredUsers.length + 1); // Split equally
-    
+            console.log("Share amount:", shareAmount);
             // Insert debts
             const debtQueries = debtors.map(debtor =>
                 pool.query(
@@ -66,9 +73,7 @@ module.exports = (pool) => {
                 )
             );
     
-            for (const query of debtQueries) {
-                await query;
-              }
+            await Promise.all(debtQueries);
             // Calculate the non-sponsored total (amount - sum of non-sponsored debts)
 const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
 
