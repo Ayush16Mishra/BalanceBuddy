@@ -118,9 +118,12 @@ const debtUpdates = debtors
         console.log(`Updated total_owed for ${debtor.user_id}. Rows affected: ${updateOwed.rowCount}`);
     });
 
-await Promise.all(debtUpdates);
+    await Promise.all(debtUpdates).catch(err => {
+        console.error("Error in debt update promises:", err);
+        throw err; // Ensures transaction gets rolled back
+    });
 
-    
+            console.log("Before commit");
             await pool.query("COMMIT"); // Commit transaction
             console.log("✅ COMMIT successful – transaction saved.");
             console.log(`Transaction ${transaction_id} added for group ${group_id} by user ${lender_id}. Total amount: ${amount}, Sponsored: ${sponsoredUserIds.length}, Debtors: ${debtors.length}`);
