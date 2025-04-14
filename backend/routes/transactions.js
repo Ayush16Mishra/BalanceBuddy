@@ -73,7 +73,7 @@ module.exports = (pool) => {
                     ]
                 );
             }
-            
+            console.log(`Inserted debt for user ${debtor.user_id}. Rows affected: ${result.rowCount}`);
             // Calculate the non-sponsored total (amount - sum of non-sponsored debts)
 const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
 
@@ -90,36 +90,45 @@ await pool.query(
      WHERE user_id = $2 AND group_id = $3`,
     [nonSponsoredTotal, lender_id, group_id]
 );
-
+console.log("Now moving to debt updates");
 // Update total_spent & total_owed for each non-sponsored borrower
 const debtUpdates = debtors
-    .filter(debtor => !debtor.sponsored) // Only update non-sponsored borrowers
-    .map(debtor => pool.query(
-        `UPDATE user_groups 
-         SET total_spent = total_spent + $1
-         WHERE user_id = $2 AND group_id = $3`,
-        [shareAmount, debtor.user_id, group_id]
-    ).then(() => pool.query(
-        `UPDATE user_groups 
-         SET total_owed = COALESCE((
-            SELECT SUM(amount) 
-            FROM debts 
-            WHERE borrower_id = $1 AND group_id = $2 
-            AND status = 'unresolved' AND sponsored = false
-         ), 0)
-         WHERE user_id = $1 AND group_id = $2`,
-        [debtor.user_id, group_id]
-    )));
+    .filter(debtor => !debtor.sponsored)
+    .map(async (debtor) => {
+        const updateSpent = await pool.query(
+            `UPDATE user_groups 
+             SET total_spent = total_spent + $1
+             WHERE user_id = $2 AND group_id = $3`,
+            [shareAmount, debtor.user_id, group_id]
+        );
+        console.log(`Updated total_spent for ${debtor.user_id}. Rows affected: ${updateSpent.rowCount}`);
+
+        const updateOwed = await pool.query(
+            `UPDATE user_groups 
+             SET total_owed = COALESCE((
+                SELECT SUM(amount) 
+                FROM debts 
+                WHERE borrower_id = $1 AND group_id = $2 
+                AND status = 'unresolved' AND sponsored = false
+             ), 0)
+             WHERE user_id = $1 AND group_id = $2`,
+            [debtor.user_id, group_id]
+        );
+        console.log(`Updated total_owed for ${debtor.user_id}. Rows affected: ${updateOwed.rowCount}`);
+    });
 
 await Promise.all(debtUpdates);
 
     
             await pool.query("COMMIT"); // Commit transaction
+            console.log("✅ COMMIT successful – transaction saved.");
+            console.log(`Transaction ${transaction_id} added for group ${group_id} by user ${lender_id}. Total amount: ${amount}, Sponsored: ${sponsoredUserIds.length}, Debtors: ${debtors.length}`);
+
     
             res.status(201).json({ message: "Transaction and debts added successfully", transactionId: transaction_id });
         } catch (err) {
             await pool.query("ROLLBACK"); // Rollback on error
-            console.error("Error adding transaction and debts:", err);
+            console.error("Error adding transaction and debts:", err.message, err.stack);
             res.status(500).json({ message: "Server error" });
         }
     });
