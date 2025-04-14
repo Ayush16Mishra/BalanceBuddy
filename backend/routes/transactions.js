@@ -27,8 +27,8 @@ async function addDebts(transaction_id, group_id, lender_id, amount, sponsors) {
     console.log("Debtors with sponsor info:", debtors);
 
     // Calculate the share amount only for non-sponsored users
-    const nonSponsoredUsers = debtors.filter(debtor => !debtor.sponsored);
-    const shareAmount = amount / (nonSponsoredUsers.length + 1); // Split equally
+    const totalUsers = debtors.length + 1; // Total users including the lender
+    const shareAmount = amount / totalUsers;// Split equally
     console.log("Number of debtors to insert:", debtors.length);
 
     // Insert debts
@@ -52,6 +52,7 @@ async function addDebts(transaction_id, group_id, lender_id, amount, sponsors) {
     await Promise.all(debtQueries);
 
     // Calculate the total for non-sponsored users
+    const nonSponsoredUsers = debtors.filter(debtor => !debtor.sponsored);
     const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
 
     // Update total_spent & total_loaned for the lender (logged-in user)
