@@ -2,125 +2,136 @@
 const express = require("express");
 const router = express.Router();
 module.exports = (pool) => {
-    router.post("/add", async (req, res) => {
-        if (!req.isAuthenticated()) {
-            return res.status(401).json({ message: "Unauthorized. Please log in." });
-        }
-    
-        const { group_id, amount, reason, sponsors = [],tag} = req.body;
-        const lender_id = req.user?.user_id;
-    
-        if (!group_id || !amount) {
-            return res.status(400).json({ message: "Missing required fields." });
-        }
-    
-        try {
-            await pool.query("BEGIN"); // Start transaction
-    
-            // Get user IDs of sponsored users from usernames
-            const sponsorQuery = await pool.query(
-                `SELECT user_id FROM users WHERE username = ANY($1)`,
-                [sponsors]
-            );
-            const sponsoredUserIds = sponsorQuery.rows.map(row => row.user_id);
-    
-            // Insert transaction
-            const transactionResult = await pool.query(
-                `INSERT INTO transactions (group_id, user_id, amount, reason,tag, created_at) 
-                 VALUES ($1, $2, $3, $4,$5, CURRENT_TIMESTAMP) 
-                 RETURNING transaction_id`,
-                [group_id, lender_id, amount, reason || null,tag]
-            );
-    
-            const transaction_id = transactionResult.rows[0].transaction_id;
-            await pool.query("COMMIT");
-            console.log("✅ Transaction committed.");
+   // Helper function to add debts
+async function addDebts(transaction_id, group_id, lender_id, amount, sponsors) {
+    // Get user IDs of sponsored users from usernames
+    const sponsorQuery = await pool.query(
+        `SELECT user_id FROM users WHERE username = ANY($1)`,
+        [sponsors]
+    );
+    const sponsoredUserIds = sponsorQuery.rows.map(row => row.user_id);
 
-            await pool.query("BEGIN"); // Start another transaction for the debts
-            console.log("Debt transaction started...");
-            // Get all group members except the payer
-            const groupUsers = await pool.query(
-                `SELECT ug.user_id FROM user_groups ug
-                 WHERE ug.group_id = $1 AND ug.user_id != $2`,
-                [group_id, lender_id]
-            );
-    
-            const debtors = groupUsers.rows.map(row => ({
-                user_id: row.user_id,
-                sponsored: sponsoredUserIds.includes(row.user_id), // Match user ID from sponsor list
-            }));
-    
-            // Calculate the share amount only for non-sponsored users
-            const nonSponsoredUsers = debtors.filter(debtor => !debtor.sponsored);
-            const shareAmount = amount / (nonSponsoredUsers.length + 1); // Split equally
-    
-            // Insert debts
-            const debtQueries = debtors.map(debtor =>
-                pool.query(
-                    `INSERT INTO debts (transaction_id, group_id, lender_id, borrower_id, amount, status, sponsored, created_at) 
-                     VALUES ($1, $2, $3, $4, $5, 'unresolved', $6, CURRENT_TIMESTAMP)`,
-                    [
-                        transaction_id,
-                        group_id,
-                        lender_id,
-                        debtor.user_id,
-                        debtor.sponsored ? 0 : shareAmount, // Sponsored users owe 0
-                        debtor.sponsored
-                    ]
-                )
-            );
-    
-            await Promise.all(debtQueries); // Insert all debts in parallel
-            console.log("Debts inserted successfully.");
-            // Calculate the non-sponsored total (amount - sum of non-sponsored debts)
-const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
+    console.log("Debt transaction started...");
+    // Get all group members except the payer
+    const groupUsers = await pool.query(
+        `SELECT ug.user_id FROM user_groups ug
+         WHERE ug.group_id = $1 AND ug.user_id != $2`,
+        [group_id, lender_id]
+    );
+    console.log("Fetched group users (excluding lender):", groupUsers.rows.map(u => u.user_id));
 
-// Update total_spent & total_loaned for the lender (logged-in user)
-await pool.query(
-    `UPDATE user_groups 
-     SET total_spent = total_spent + $1,
-         total_loaned = COALESCE((
-            SELECT SUM(amount) 
-            FROM debts 
-            WHERE lender_id = $2 AND group_id = $3 
-            AND status = 'unresolved' AND sponsored = false
-         ), 0)
-     WHERE user_id = $2 AND group_id = $3`,
-    [nonSponsoredTotal, lender_id, group_id]
-);
+    const debtors = groupUsers.rows.map(row => ({
+        user_id: row.user_id,
+        sponsored: sponsoredUserIds.includes(row.user_id), // Match user ID from sponsor list
+    }));
+    console.log("Debtors with sponsor info:", debtors);
 
-// Update total_spent & total_owed for each non-sponsored borrower
-const debtUpdates = debtors
-    .filter(debtor => !debtor.sponsored) // Only update non-sponsored borrowers
-    .map(debtor => pool.query(
-        `UPDATE user_groups 
-         SET total_spent = total_spent + $1
-         WHERE user_id = $2 AND group_id = $3`,
-        [shareAmount, debtor.user_id, group_id]
-    ).then(() => pool.query(
-        `UPDATE user_groups 
-         SET total_owed = COALESCE((
-            SELECT SUM(amount) 
-            FROM debts 
-            WHERE borrower_id = $1 AND group_id = $2 
-            AND status = 'unresolved' AND sponsored = false
-         ), 0)
-         WHERE user_id = $1 AND group_id = $2`,
-        [debtor.user_id, group_id]
-    )));
+    // Calculate the share amount only for non-sponsored users
+    const nonSponsoredUsers = debtors.filter(debtor => !debtor.sponsored);
+    const shareAmount = amount / (nonSponsoredUsers.length + 1); // Split equally
+    console.log("Number of debtors to insert:", debtors.length);
 
-await Promise.all(debtUpdates);
-
-    
-            await pool.query("COMMIT"); // Commit transaction
-    
-            res.status(201).json({ message: "Transaction and debts added successfully", transactionId: transaction_id });
-        } catch (err) {
-            await pool.query("ROLLBACK"); // Rollback on error
-            console.error("Error adding transaction and debts:", err);
-            res.status(500).json({ message: "Server error" });
-        }
+    // Insert debts
+    const debtQueries = debtors.map(debtor => {
+        return pool.query(
+            `INSERT INTO debts (transaction_id, group_id, lender_id, borrower_id, amount, status, sponsored, created_at) 
+             VALUES ($1, $2, $3, $4, $5, 'unresolved', $6, CURRENT_TIMESTAMP)`,
+            [
+                transaction_id,
+                group_id,
+                lender_id,
+                debtor.user_id,
+                debtor.sponsored ? 0 : shareAmount, // Sponsored users owe 0
+                debtor.sponsored
+            ]
+        ).catch(err => {
+            console.error(`Error inserting debt for debtor ${debtor.user_id}:`, err);
+        });
     });
+
+    await Promise.all(debtQueries);
+
+    // Calculate the total for non-sponsored users
+    const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
+
+    // Update total_spent & total_loaned for the lender (logged-in user)
+    await pool.query(
+        `UPDATE user_groups 
+         SET total_spent = total_spent + $1,
+             total_loaned = COALESCE((
+                SELECT SUM(amount) 
+                FROM debts 
+                WHERE lender_id = $2 AND group_id = $3 
+                AND status = 'unresolved' AND sponsored = false
+             ), 0)
+         WHERE user_id = $2 AND group_id = $3`,
+        [nonSponsoredTotal, lender_id, group_id]
+    );
+
+    // Update total_spent & total_owed for each non-sponsored borrower
+    const debtUpdates = debtors
+        .filter(debtor => !debtor.sponsored) // Only update non-sponsored borrowers
+        .map(debtor => pool.query(
+            `UPDATE user_groups 
+             SET total_spent = total_spent + $1
+             WHERE user_id = $2 AND group_id = $3`,
+            [shareAmount, debtor.user_id, group_id]
+        ).then(() => pool.query(
+            `UPDATE user_groups 
+             SET total_owed = COALESCE((
+                SELECT SUM(amount) 
+                FROM debts 
+                WHERE borrower_id = $1 AND group_id = $2 
+                AND status = 'unresolved' AND sponsored = false
+             ), 0)
+             WHERE user_id = $1 AND group_id = $2`,
+            [debtor.user_id, group_id]
+        )));
+
+    await Promise.all(debtUpdates);
+}
+
+// Route to add transaction
+router.post("/add", async (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized. Please log in." });
+    }
+
+    const { group_id, amount, reason, sponsors = [], tag } = req.body;
+    const lender_id = req.user?.user_id;
+
+    if (!group_id || !amount) {
+        return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    try {
+        await pool.query("BEGIN"); // Start transaction
+        await pool.query('SET CONSTRAINTS ALL DEFERRED');
+
+        // Insert transaction
+        const transactionResult = await pool.query(
+            `INSERT INTO transactions (group_id, user_id, amount, reason, tag, created_at) 
+             VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) 
+             RETURNING transaction_id`,
+            [group_id, lender_id, amount, reason || null, tag]
+        );
+
+        const transaction_id = transactionResult.rows[0].transaction_id;
+
+        await pool.query("COMMIT"); // Commit transaction
+
+        // Now call the addDebts function to handle debts
+        await addDebts(transaction_id, group_id, lender_id, amount, sponsors);
+
+        res.status(201).json({ message: "Transaction and debts added successfully", transactionId: transaction_id });
+    } catch (err) {
+        await pool.query("ROLLBACK"); // Rollback on error
+        console.error("Error adding transaction and debts:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
     
     
     router.get("/:group_id", async (req, res) => {
