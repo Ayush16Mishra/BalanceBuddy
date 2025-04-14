@@ -66,7 +66,9 @@ module.exports = (pool) => {
                 )
             );
     
-            await Promise.all(debtQueries);
+            for (const query of debtQueries) {
+                await query;
+              }
             // Calculate the non-sponsored total (amount - sum of non-sponsored debts)
 const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
 
