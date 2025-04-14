@@ -58,8 +58,9 @@ module.exports = (pool) => {
             const shareAmount = amount / (nonSponsoredUsers.length + 1); // Split equally
             console.log("Share amount:", shareAmount);
             // Insert debts
-            const debtQueries = debtors.map(debtor =>
-                pool.query(
+            for (const debtor of debtors) {
+                console.log("Inserting debt for debtor:", debtor);
+                await pool.query(
                     `INSERT INTO debts (transaction_id, group_id, lender_id, borrower_id, amount, status, sponsored, created_at) 
                      VALUES ($1, $2, $3, $4, $5, 'unresolved', $6, CURRENT_TIMESTAMP)`,
                     [
@@ -67,13 +68,12 @@ module.exports = (pool) => {
                         group_id,
                         lender_id,
                         debtor.user_id,
-                        debtor.sponsored ? 0 : shareAmount, // Sponsored users owe 0
+                        debtor.sponsored ? 0 : shareAmount,
                         debtor.sponsored
                     ]
-                )
-            );
-    
-            await Promise.all(debtQueries);
+                );
+            }
+            
             // Calculate the non-sponsored total (amount - sum of non-sponsored debts)
 const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
 
