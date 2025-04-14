@@ -99,7 +99,7 @@ module.exports = (pool) => {
                 `SELECT g.group_id, g.name ,g.created_by
                  FROM groups g
                  INNER JOIN user_groups ug ON g.group_id = ug.group_id
-                 WHERE ug.user_id = $1`,
+                 WHERE ug.user_id = $1 AND g.is_deleted = false`,
                 [userId]
             );
     
