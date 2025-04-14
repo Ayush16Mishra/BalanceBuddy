@@ -72,8 +72,9 @@ module.exports = (pool) => {
                         debtor.sponsored
                     ]
                 );
+                console.log(`Inserted debt for user ${debtor.user_id}. Rows affected: ${result.rowCount}`);
             }
-            console.log(`Inserted debt for user ${debtor.user_id}. Rows affected: ${result.rowCount}`);
+            
             // Calculate the non-sponsored total (amount - sum of non-sponsored debts)
 const nonSponsoredTotal = amount - nonSponsoredUsers.length * shareAmount;
 
