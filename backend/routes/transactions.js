@@ -60,7 +60,7 @@ module.exports = (pool) => {
             // Insert debts
             for (const debtor of debtors) {
                 console.log("Inserting debt for debtor:", debtor);
-                await pool.query(
+                const result = await pool.query(
                     `INSERT INTO debts (transaction_id, group_id, lender_id, borrower_id, amount, status, sponsored, created_at) 
                      VALUES ($1, $2, $3, $4, $5, 'unresolved', $6, CURRENT_TIMESTAMP)`,
                     [
