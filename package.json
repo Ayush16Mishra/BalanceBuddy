@@ -1,0 +1,32 @@
+{
+  "name": "development",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Modern expense sharing application built with React, Express, PostgreSQL and Docker.",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "format": "npm run format --workspaces",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ayush16Mishra/BalanceBuddy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ayush16Mishra/BalanceBuddy/issues"
+  },
+  "homepage": "https://github.com/Ayush16Mishra/BalanceBuddy#readme",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

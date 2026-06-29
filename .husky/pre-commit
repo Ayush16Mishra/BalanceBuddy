@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+echo "🔍 Linting client..."
+npm run lint --workspace client || exit 1
+
+echo "🎨 Checking client formatting..."
+npm run format:check --workspace client || exit 1
+
+echo "🔍 Linting server..."
+npm run lint --workspace server || exit 1
+
+echo "🎨 Checking server formatting..."
+npm run format:check --workspace server || exit 1
+
+echo "✅ Pre-commit checks passed."
