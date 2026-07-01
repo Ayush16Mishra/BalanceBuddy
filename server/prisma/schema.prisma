@@ -1,0 +1,209 @@
+// This is your Prisma schema file.
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ExpenseStatus {
+  ACTIVE
+  SETTLED
+  CANCELLED
+}
+
+enum ExpenseShareStatus {
+  PENDING
+  PAID
+}
+
+enum SplitMethod {
+  EQUAL
+  EXACT
+  PERCENTAGE
+  SHARES
+}
+
+enum Category {
+  FOOD
+  TRAVEL
+  ACCOMMODATION
+  ENTERTAINMENT
+  SHOPPING
+  UTILITIES
+  MISCELLANEOUS
+}
+
+enum InviteStatus {
+  ACTIVE
+  USED
+  EXPIRED
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
+model User {
+  // Primary Key
+  id String @id @default(cuid())
+
+  // Authentication
+  email          String       @unique
+  password       String?
+  authProvider   AuthProvider @default(LOCAL)
+  googleId       String?      @unique
+  emailVerified  Boolean      @default(false)
+
+  // Profile
+  name       String
+  avatarUrl  String?
+
+  // Audit
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  memberships      GroupMember[]
+
+  expensesCreated  Expense[]      @relation("CreatedExpenses")
+  expensesPaid     Expense[]      @relation("PaidExpenses")
+
+  creditorShares   ExpenseShare[] @relation("Creditor")
+  debtorShares     ExpenseShare[] @relation("Debtor")
+}
+
+model Group {
+  id             String   @id @default(cuid())
+
+  name           String
+  description    String?
+  coverImageUrl  String?
+
+  lastActivityAt DateTime?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  memberships    GroupMember[]
+  expenses       Expense[]
+  invites        Invite[]
+
+  
+}
+
+model GroupMember {
+  groupId String
+  userId  String
+
+  joinedAt DateTime @default(now())
+
+  // Relations
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@id([groupId, userId])
+  @@index([groupId])
+@@index([userId])
+}
+
+
+model Expense {
+  // Primary Key
+  id String @id @default(cuid())
+
+  // Expense Details
+  title        String?
+  amount       Decimal @db.Decimal(10, 2)
+  category     Category
+  splitMethod  SplitMethod
+  status       ExpenseStatus @default(ACTIVE)
+  expenseDate  DateTime @default(now())
+
+  // Progress
+  participantCount Int
+  paidCount        Int @default(0)
+
+  // Foreign Keys
+  groupId         String
+  createdByUserId String
+  paidByUserId    String
+
+  // Audit
+  createdAt DateTime @default(now())
+
+  // Relations
+  group Group @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  createdBy User @relation("CreatedExpenses",fields: [createdByUserId],references: [id],onDelete: Restrict)
+
+  paidBy User @relation("PaidExpenses",fields: [paidByUserId],references: [id],onDelete: Restrict)
+
+  shares ExpenseShare[]
+
+  @@index([groupId])
+  @@index([paidByUserId])
+  @@index([createdByUserId])
+  @@index([status])
+  @@index([expenseDate])
+}
+
+model ExpenseShare {
+  // Primary Key
+  id String @id @default(cuid())
+
+  // Share Details
+  amount Decimal @db.Decimal(10, 2)
+  status ExpenseShareStatus @default(PENDING)
+  paidAt DateTime?
+
+  // Foreign Keys
+  expenseId  String
+  creditorId String
+  debtorId   String
+
+  // Relations
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Restrict)
+
+  creditor User @relation("Creditor",fields: [creditorId],references: [id],onDelete: Restrict)
+
+  debtor User @relation("Debtor",fields: [debtorId],references: [id],onDelete: Restrict)
+
+  @@unique([expenseId, debtorId])
+
+  @@index([expenseId])
+  @@index([creditorId])
+  @@index([debtorId])
+  @@index([status])
+}
+
+model Invite {
+  // Primary Key
+  id String @id @default(cuid())
+
+  // Invite Details
+  token     String       @unique
+  status    InviteStatus @default(ACTIVE)
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  // Foreign Key
+  groupId String
+
+  // Audit
+  createdAt DateTime @default(now())
+
+  // Relations
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([status])
+  @@index([expiresAt])
+}
