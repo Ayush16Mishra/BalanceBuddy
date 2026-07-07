@@ -2,8 +2,7 @@
 // Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -49,54 +48,56 @@ enum AuthProvider {
   LOCAL
   GOOGLE
 }
-
 model User {
   // Primary Key
   id String @id @default(cuid())
 
   // Authentication
-  email          String       @unique
-  password       String?
-  authProvider   AuthProvider @default(LOCAL)
-  googleId       String?      @unique
-  emailVerified  Boolean      @default(false)
+  email         String       @unique
+  password      String?
+  authProvider  AuthProvider @default(LOCAL)
+  googleId      String?      @unique
+  emailVerified Boolean      @default(false)
 
   // Profile
-  name       String
-  avatarUrl  String?
+  name      String
+  avatarUrl String?
 
   // Audit
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  memberships      GroupMember[]
+  memberships GroupMember[]
 
-  expensesCreated  Expense[]      @relation("CreatedExpenses")
-  expensesPaid     Expense[]      @relation("PaidExpenses")
+  expensesCreated Expense[] @relation("CreatedExpenses")
+  expensesPaid    Expense[] @relation("PaidExpenses")
 
-  creditorShares   ExpenseShare[] @relation("Creditor")
-  debtorShares     ExpenseShare[] @relation("Debtor")
+  creditorShares ExpenseShare[] @relation("Creditor")
+  debtorShares   ExpenseShare[] @relation("Debtor")
+
+  verificationTokens VerificationToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Group {
-  id             String   @id @default(cuid())
+  id            String @id @default(cuid())
 
-  name           String
-  description    String?
-  coverImageUrl  String?
+  name          String
+  description   String?
+  coverImageUrl String?
+
+  isLocked      Boolean @default(false)
 
   lastActivityAt DateTime?
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  memberships    GroupMember[]
-  expenses       Expense[]
-  invites        Invite[]
-
-  
+  memberships GroupMember[]
+  expenses    Expense[]
+  invites     Invite[]
 }
 
 model GroupMember {
@@ -205,5 +206,38 @@ model Invite {
 
   @@index([groupId])
   @@index([status])
+  @@index([expiresAt])
+}
+model VerificationToken {
+  id String @id @default(cuid())
+
+  token String @unique
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  usedAt DateTime?
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id String @id @default(cuid())
+
+  token String @unique
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  usedAt DateTime?
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@index([expiresAt])
 }
