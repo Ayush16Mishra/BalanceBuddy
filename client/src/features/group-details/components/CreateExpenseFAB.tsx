@@ -17,7 +17,7 @@ export const CreateExpenseFAB = ({ group }: CreateExpenseFABProps) => {
     <>
       <Button
         size="lg"
-        className="fixed bottom-8 right-8 rounded-full shadow-lg"
+        className="fixed bottom-24 right-4 rounded-full shadow-lg md:bottom-8 md:right-8"
         onClick={() => setOpen(true)}
       >
         <Plus className="mr-2 h-5 w-5" />
