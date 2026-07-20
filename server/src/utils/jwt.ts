@@ -7,23 +7,15 @@ const accessExpiresIn = process.env.ACCESS_TOKEN_EXPIRES_IN!;
 const refreshExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN!;
 
 export const generateAccessToken = (userId: string) => {
-  return jwt.sign(
-    { userId },
-    accessSecret,
-    {
-      expiresIn: accessExpiresIn,
-    } as SignOptions
-  );
+  return jwt.sign({ userId }, accessSecret, {
+    expiresIn: accessExpiresIn,
+  } as SignOptions);
 };
 
 export const generateRefreshToken = (userId: string) => {
-  return jwt.sign(
-    { userId },
-    refreshSecret,
-    {
-      expiresIn: refreshExpiresIn,
-    } as SignOptions
-  );
+  return jwt.sign({ userId }, refreshSecret, {
+    expiresIn: refreshExpiresIn,
+  } as SignOptions);
 };
 
 export const verifyAccessToken = (token: string) => {

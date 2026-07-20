@@ -20,30 +20,29 @@ export class UsersRepository {
   }
 
   async updateProfile(
-  userId: string,
-  data: {
-    name?: string;
-    avatarUrl?: string;
+    userId: string,
+    data: {
+      name?: string;
+      avatarUrl?: string;
+    }
+  ) {
+    return prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        emailVerified: true,
+        authProvider: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
-) {
-  return prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data,
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      avatarUrl: true,
-      emailVerified: true,
-      authProvider: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-}
-
 }
 
 export const usersRepository = new UsersRepository();

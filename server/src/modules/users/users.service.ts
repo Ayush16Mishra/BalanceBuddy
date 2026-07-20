@@ -15,61 +15,49 @@ export class UsersService {
   }
 
   async updateProfile(
-  userId: string,
-  data: {
-    name?: string;
-    avatarUrl?: string;
+    userId: string,
+    data: {
+      name?: string;
+      avatarUrl?: string;
+    }
+  ) {
+    await this.getCurrentUser(userId);
+
+    return usersRepository.updateProfile(userId, data);
   }
-) {
-  await this.getCurrentUser(userId);
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await authRepository.findUserWithPasswordById(userId);
 
-  return usersRepository.updateProfile(userId, data);
-}
-async changePassword(
-  userId: string,
-  currentPassword: string,
-  newPassword: string
-) {
-  const user = await authRepository.findUserWithPasswordById(userId);
+    if (!user) {
+      throw new ApiError(404, "User not found.");
+    }
 
-  if (!user) {
-    throw new ApiError(404, "User not found.");
-  }
+    const isPasswordCorrect = await comparePassword(currentPassword, user.password!);
 
-  const isPasswordCorrect = await comparePassword(
-    currentPassword,
-    user.password!
-  );
+    if (!isPasswordCorrect) {
+      throw new ApiError(400, "Current password is incorrect.");
+    }
 
-  if (!isPasswordCorrect) {
-    throw new ApiError(400, "Current password is incorrect.");
+    const hashedPassword = await hashPassword(newPassword);
+
+    await authRepository.updateUserPassword(userId, hashedPassword);
   }
 
-  const hashedPassword = await hashPassword(newPassword);
+  async deleteAccount(userId: string, password: string) {
+    const user = await authRepository.findUserWithPasswordById(userId);
 
-  await authRepository.updateUserPassword(userId, hashedPassword);
-}
+    if (!user) {
+      throw new ApiError(404, "User not found.");
+    }
 
-async deleteAccount(userId: string, password: string) {
-  const user = await authRepository.findUserWithPasswordById(userId);
+    const isPasswordCorrect = await comparePassword(password, user.password!);
 
-  if (!user) {
-    throw new ApiError(404, "User not found.");
+    if (!isPasswordCorrect) {
+      throw new ApiError(400, "Incorrect password.");
+    }
+
+    await authRepository.deleteUser(userId);
   }
-
-  const isPasswordCorrect = await comparePassword(
-    password,
-    user.password!
-  );
-
-  if (!isPasswordCorrect) {
-    throw new ApiError(400, "Incorrect password.");
-  }
-
-  await authRepository.deleteUser(userId);
-}
-
-
 }
 
 export const usersService = new UsersService();

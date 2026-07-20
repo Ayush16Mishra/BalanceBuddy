@@ -20,46 +20,40 @@ export const usersController = {
   }),
 
   updateProfile: asyncHandler(async (req: Request, res: Response) => {
-  const data = updateProfileSchema.parse(req.body);
+    const data = updateProfileSchema.parse(req.body);
 
-  const user = await usersService.updateProfile(req.user!.id, data);
+    const user = await usersService.updateProfile(req.user!.id, data);
 
-  return res.status(200).json({
-    success: true,
-    message: "Profile updated successfully.",
-    data: {
-      user,
-    },
-  });
-}),
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully.",
+      data: {
+        user,
+      },
+    });
+  }),
 
-changePassword: asyncHandler(async (req: Request, res: Response) => {
-  const data = changePasswordSchema.parse(req.body);
+  changePassword: asyncHandler(async (req: Request, res: Response) => {
+    const data = changePasswordSchema.parse(req.body);
 
-  await usersService.changePassword(
-    req.user!.id,
-    data.currentPassword,
-    data.newPassword
-  );
+    await usersService.changePassword(req.user!.id, data.currentPassword, data.newPassword);
 
-  return res.status(200).json({
-    success: true,
-    message: "Password changed successfully.",
-  });
-}),
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully.",
+    });
+  }),
 
+  deleteAccount: asyncHandler(async (req: Request, res: Response) => {
+    const data = deleteAccountSchema.parse(req.body);
 
-deleteAccount: asyncHandler(async (req: Request, res: Response) => {
-  const data = deleteAccountSchema.parse(req.body);
+    await usersService.deleteAccount(req.user!.id, data.password);
 
-  await usersService.deleteAccount(req.user!.id, data.password);
+    clearRefreshTokenCookie(res);
 
-  clearRefreshTokenCookie(res);
-
-  return res.status(200).json({
-    success: true,
-    message: "Account deleted successfully.",
-  });
-}),
-
+    return res.status(200).json({
+      success: true,
+      message: "Account deleted successfully.",
+    });
+  }),
 };

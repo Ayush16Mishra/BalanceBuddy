@@ -4,11 +4,7 @@ import { z } from "zod";
 const baseExpenseSchema = z.object({
   groupId: z.string().cuid("Invalid group ID."),
 
-  title: z
-    .string()
-    .trim()
-    .max(100, "Title must not exceed 100 characters.")
-    .optional(),
+  title: z.string().trim().max(100, "Title must not exceed 100 characters.").optional(),
 
   amount: z
     .number()
@@ -28,12 +24,9 @@ const equalSplitSchema = baseExpenseSchema.extend({
   participants: z
     .array(z.string().cuid("Invalid participant ID."))
     .min(1, "At least one participant is required.")
-    .refine(
-      (participants) => new Set(participants).size === participants.length,
-      {
-        message: "Participants must be unique.",
-      }
-    ),
+    .refine((participants) => new Set(participants).size === participants.length, {
+      message: "Participants must be unique.",
+    }),
 });
 
 const exactSplitSchema = baseExpenseSchema.extend({
@@ -52,8 +45,7 @@ const exactSplitSchema = baseExpenseSchema.extend({
     .min(1, "At least one participant is required.")
     .refine(
       (participants) =>
-        new Set(participants.map((participant) => participant.userId)).size ===
-        participants.length,
+        new Set(participants.map((participant) => participant.userId)).size === participants.length,
       {
         message: "Participants must be unique.",
       }
@@ -66,6 +58,18 @@ export const createExpenseSchema = z.discriminatedUnion("splitMethod", [
 ]);
 
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>;
+
+export const getGroupExpensesSchema = z.object({
+  groupId: z.string().cuid("Invalid group ID."),
+});
+
+export type GetGroupExpensesInput = z.infer<typeof getGroupExpensesSchema>;
+
+export const getExpenseDetailsSchema = z.object({
+  expenseId: z.string().cuid("Invalid expense ID."),
+});
+
+export type GetExpenseDetailsInput = z.infer<typeof getExpenseDetailsSchema>;
 
 export const cancelExpenseSchema = z.object({
   expenseId: z.string().cuid("Invalid expense ID."),

@@ -8,11 +8,7 @@ interface JwtPayload {
   exp: number;
 }
 
-export const authenticate = (
-  req: Request,
-  _res: Response,
-  next: NextFunction
-) => {
+export const authenticate = (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {

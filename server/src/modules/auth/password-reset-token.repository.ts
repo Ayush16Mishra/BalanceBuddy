@@ -1,11 +1,7 @@
 import { prisma } from "../../database/prisma.js";
 
 export const passwordResetTokenRepository = {
-  async create(data: {
-    userId: string;
-    token: string;
-    expiresAt: Date;
-  }) {
+  async create(data: { userId: string; token: string; expiresAt: Date }) {
     return prisma.passwordResetToken.create({
       data,
     });

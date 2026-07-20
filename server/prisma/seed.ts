@@ -41,24 +41,16 @@ async function createExpenseWithShares({
   expenseDate = new Date(),
   shares,
 }: CreateExpenseInput) {
-  const participantIds = new Set([
-  paidByUserId,
-  ...shares.map((share) => share.debtorId),
-]);
+  const participantIds = new Set([paidByUserId, ...shares.map((share) => share.debtorId)]);
 
-const participantCount = participantIds.size;
+  const participantCount = participantIds.size;
 
-const paidShareCount = shares.filter(
-  (share) => share.status === ExpenseShareStatus.PAID
-).length;
+  const paidShareCount = shares.filter((share) => share.status === ExpenseShareStatus.PAID).length;
 
-// Payer is always considered paid
-const paidCount = 1 + paidShareCount;
+  // Payer is always considered paid
+  const paidCount = 1 + paidShareCount;
 
-const finalStatus =
-  paidCount === participantCount
-    ? ExpenseStatus.SETTLED
-    : status;
+  const finalStatus = paidCount === participantCount ? ExpenseStatus.SETTLED : status;
 
   const expense = await prisma.expense.create({
     data: {
@@ -84,10 +76,7 @@ const finalStatus =
         debtorId: share.debtorId,
         amount: share.amount,
         status: share.status ?? ExpenseShareStatus.PENDING,
-        paidAt:
-          share.status === ExpenseShareStatus.PAID
-            ? expenseDate
-            : null,
+        paidAt: share.status === ExpenseShareStatus.PAID ? expenseDate : null,
       },
     });
   }
@@ -165,21 +154,21 @@ async function main() {
 
   // ---------------- Groups ----------------
 
-const goa = await prisma.group.create({
-  data: {
-    name: "Goa Trip",
-    description: "Goa vacation",
-    lastActivityAt: new Date(),
-  },
-});
+  const goa = await prisma.group.create({
+    data: {
+      name: "Goa Trip",
+      description: "Goa vacation",
+      lastActivityAt: new Date(),
+    },
+  });
 
-const flat = await prisma.group.create({
-  data: {
-    name: "Flatmates",
-    description: "Apartment expenses",
-    lastActivityAt: new Date(),
-  },
-});
+  const flat = await prisma.group.create({
+    data: {
+      name: "Flatmates",
+      description: "Apartment expenses",
+      lastActivityAt: new Date(),
+    },
+  });
 
   // ---------------- Memberships ----------------
 
@@ -205,357 +194,352 @@ const flat = await prisma.group.create({
   // ---------------- Expenses ----------------
   // We'll add these next.
 
+  await createExpenseWithShares({
+    title: "Hotel",
+    amount: 10000,
+    groupId: goa.id,
+    createdByUserId: ayush.id,
+    paidByUserId: ayush.id,
+    category: Category.ACCOMMODATION,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: rahul.id,
+        amount: 2000,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: john.id,
+        amount: 2000,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: priya.id,
+        amount: 2000,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: neha.id,
+        amount: 2000,
+        status: ExpenseShareStatus.PAID,
+      },
+    ],
+  });
+  await createExpenseWithShares({
+    title: "Lunch",
+    amount: 2500,
+    groupId: goa.id,
+    createdByUserId: rahul.id,
+    paidByUserId: rahul.id,
+    category: Category.FOOD,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 500,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: john.id,
+        amount: 500,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: priya.id,
+        amount: 500,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: neha.id,
+        amount: 500,
+        status: ExpenseShareStatus.PENDING,
+      },
+    ],
+  });
 
   await createExpenseWithShares({
-  title: "Hotel",
-  amount: 10000,
-  groupId: goa.id,
-  createdByUserId: ayush.id,
-  paidByUserId: ayush.id,
-  category: Category.ACCOMMODATION,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: rahul.id,
-      amount: 2000,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: john.id,
-      amount: 2000,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: priya.id,
-      amount: 2000,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: neha.id,
-      amount: 2000,
-      status: ExpenseShareStatus.PAID,
-    },
-  ],
-});
-await createExpenseWithShares({
-  title: "Lunch",
-  amount: 2500,
-  groupId: goa.id,
-  createdByUserId: rahul.id,
-  paidByUserId: rahul.id,
-  category: Category.FOOD,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 500,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: john.id,
-      amount: 500,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: priya.id,
-      amount: 500,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: neha.id,
-      amount: 500,
-      status: ExpenseShareStatus.PENDING,
-    },
-  ],
-});
+    title: "Taxi",
+    amount: 1200,
+    groupId: goa.id,
+    createdByUserId: john.id,
+    paidByUserId: john.id,
+    category: Category.TRAVEL,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 300,
+      },
+      {
+        debtorId: rahul.id,
+        amount: 300,
+      },
+      {
+        debtorId: priya.id,
+        amount: 300,
+      },
+      {
+        debtorId: neha.id,
+        amount: 300,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Taxi",
-  amount: 1200,
-  groupId: goa.id,
-  createdByUserId: john.id,
-  paidByUserId: john.id,
-  category: Category.TRAVEL,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 300,
-    },
-    {
-      debtorId: rahul.id,
-      amount: 300,
-    },
-    {
-      debtorId: priya.id,
-      amount: 300,
-    },
-    {
-      debtorId: neha.id,
-      amount: 300,
-    },
-  ],
-});
+  await createExpenseWithShares({
+    title: "Parasailing",
+    amount: 5000,
+    groupId: goa.id,
+    createdByUserId: priya.id,
+    paidByUserId: priya.id,
+    category: Category.ENTERTAINMENT,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 1000,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: rahul.id,
+        amount: 1000,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: john.id,
+        amount: 1000,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: neha.id,
+        amount: 1000,
+        status: ExpenseShareStatus.PAID,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Parasailing",
-  amount: 5000,
-  groupId: goa.id,
-  createdByUserId: priya.id,
-  paidByUserId: priya.id,
-  category: Category.ENTERTAINMENT,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 1000,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: rahul.id,
-      amount: 1000,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: john.id,
-      amount: 1000,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: neha.id,
-      amount: 1000,
-      status: ExpenseShareStatus.PAID,
-    },
-  ],
-});
+  await createExpenseWithShares({
+    title: "Fuel",
+    amount: 1500,
+    groupId: goa.id,
+    createdByUserId: ayush.id,
+    paidByUserId: ayush.id,
+    category: Category.TRAVEL,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: rahul.id,
+        amount: 375,
+      },
+      {
+        debtorId: john.id,
+        amount: 375,
+      },
+      {
+        debtorId: priya.id,
+        amount: 375,
+      },
+      {
+        debtorId: neha.id,
+        amount: 375,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Fuel",
-  amount: 1500,
-  groupId: goa.id,
-  createdByUserId: ayush.id,
-  paidByUserId: ayush.id,
-  category: Category.TRAVEL,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: rahul.id,
-      amount: 375,
-    },
-    {
-      debtorId: john.id,
-      amount: 375,
-    },
-    {
-      debtorId: priya.id,
-      amount: 375,
-    },
-    {
-      debtorId: neha.id,
-      amount: 375,
-    },
-  ],
-});
+  await createExpenseWithShares({
+    title: "Snacks",
+    amount: 800,
+    groupId: goa.id,
+    createdByUserId: neha.id,
+    paidByUserId: neha.id,
+    category: Category.FOOD,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 200,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: rahul.id,
+        amount: 200,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: john.id,
+        amount: 200,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: priya.id,
+        amount: 200,
+        status: ExpenseShareStatus.PAID,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Snacks",
-  amount: 800,
-  groupId: goa.id,
-  createdByUserId: neha.id,
-  paidByUserId: neha.id,
-  category: Category.FOOD,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 200,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: rahul.id,
-      amount: 200,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: john.id,
-      amount: 200,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: priya.id,
-      amount: 200,
-      status: ExpenseShareStatus.PAID,
-    },
-  ],
-});
+  await createExpenseWithShares({
+    title: "Dinner",
+    amount: 3000,
+    groupId: goa.id,
+    createdByUserId: rahul.id,
+    paidByUserId: rahul.id,
+    category: Category.FOOD,
+    splitMethod: SplitMethod.EQUAL,
+    status: ExpenseStatus.CANCELLED,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 750,
+      },
+      {
+        debtorId: john.id,
+        amount: 750,
+      },
+      {
+        debtorId: priya.id,
+        amount: 750,
+      },
+      {
+        debtorId: neha.id,
+        amount: 750,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Dinner",
-  amount: 3000,
-  groupId: goa.id,
-  createdByUserId: rahul.id,
-  paidByUserId: rahul.id,
-  category: Category.FOOD,
-  splitMethod: SplitMethod.EQUAL,
-  status: ExpenseStatus.CANCELLED,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 750,
-    },
-    {
-      debtorId: john.id,
-      amount: 750,
-    },
-    {
-      debtorId: priya.id,
-      amount: 750,
-    },
-    {
-      debtorId: neha.id,
-      amount: 750,
-    },
-  ],
-});
+  await createExpenseWithShares({
+    title: "Electricity Bill",
+    amount: 4200,
+    groupId: flat.id,
+    createdByUserId: rahul.id,
+    paidByUserId: rahul.id,
+    category: Category.UTILITIES,
+    splitMethod: SplitMethod.EXACT,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 1400,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: priya.id,
+        amount: 1200,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: neha.id,
+        amount: 1600,
+        status: ExpenseShareStatus.PENDING,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Electricity Bill",
-  amount: 4200,
-  groupId: flat.id,
-  createdByUserId: rahul.id,
-  paidByUserId: rahul.id,
-  category: Category.UTILITIES,
-  splitMethod: SplitMethod.EXACT,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 1400,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: priya.id,
-      amount: 1200,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: neha.id,
-      amount: 1600,
-      status: ExpenseShareStatus.PENDING,
-    },
-  ],
-});
+  await createExpenseWithShares({
+    title: "Internet",
+    amount: 2400,
+    groupId: flat.id,
+    createdByUserId: ayush.id,
+    paidByUserId: ayush.id,
+    category: Category.UTILITIES,
+    splitMethod: SplitMethod.EXACT,
+    shares: [
+      {
+        debtorId: rahul.id,
+        amount: 800,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: priya.id,
+        amount: 700,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: neha.id,
+        amount: 900,
+        status: ExpenseShareStatus.PAID,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Internet",
-  amount: 2400,
-  groupId: flat.id,
-  createdByUserId: ayush.id,
-  paidByUserId: ayush.id,
-  category: Category.UTILITIES,
-  splitMethod: SplitMethod.EXACT,
-  shares: [
-    {
-      debtorId: rahul.id,
-      amount: 800,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: priya.id,
-      amount: 700,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: neha.id,
-      amount: 900,
-      status: ExpenseShareStatus.PAID,
-    },
-  ],
-});
+  await createExpenseWithShares({
+    title: "Groceries",
+    amount: 3200,
+    groupId: flat.id,
+    createdByUserId: priya.id,
+    paidByUserId: priya.id,
+    category: Category.FOOD,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 800,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: rahul.id,
+        amount: 800,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: neha.id,
+        amount: 800,
+        status: ExpenseShareStatus.PENDING,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Groceries",
-  amount: 3200,
-  groupId: flat.id,
-  createdByUserId: priya.id,
-  paidByUserId: priya.id,
-  category: Category.FOOD,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 800,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: rahul.id,
-      amount: 800,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: neha.id,
-      amount: 800,
-      status: ExpenseShareStatus.PENDING,
-    },
-  ],
-});
+  await createExpenseWithShares({
+    title: "Cleaning Supplies",
+    amount: 1200,
+    groupId: flat.id,
+    createdByUserId: neha.id,
+    paidByUserId: neha.id,
+    category: Category.SHOPPING,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 300,
+        status: ExpenseShareStatus.PENDING,
+      },
+      {
+        debtorId: rahul.id,
+        amount: 300,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: priya.id,
+        amount: 300,
+        status: ExpenseShareStatus.PENDING,
+      },
+    ],
+  });
 
-await createExpenseWithShares({
-  title: "Cleaning Supplies",
-  amount: 1200,
-  groupId: flat.id,
-  createdByUserId: neha.id,
-  paidByUserId: neha.id,
-  category: Category.SHOPPING,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 300,
-      status: ExpenseShareStatus.PENDING,
-    },
-    {
-      debtorId: rahul.id,
-      amount: 300,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: priya.id,
-      amount: 300,
-      status: ExpenseShareStatus.PENDING,
-    },
-  ],
-});
-
-await createExpenseWithShares({
-  title: "Rent Deposit",
-  amount: 12000,
-  groupId: flat.id,
-  createdByUserId: rahul.id,
-  paidByUserId: rahul.id,
-  category: Category.ACCOMMODATION,
-  splitMethod: SplitMethod.EQUAL,
-  shares: [
-    {
-      debtorId: ayush.id,
-      amount: 3000,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: priya.id,
-      amount: 3000,
-      status: ExpenseShareStatus.PAID,
-    },
-    {
-      debtorId: neha.id,
-      amount: 3000,
-      status: ExpenseShareStatus.PAID,
-    },
-  ],
-});
-
-
-
-  console.log("🌱 Database seeded successfully!");
+  await createExpenseWithShares({
+    title: "Rent Deposit",
+    amount: 12000,
+    groupId: flat.id,
+    createdByUserId: rahul.id,
+    paidByUserId: rahul.id,
+    category: Category.ACCOMMODATION,
+    splitMethod: SplitMethod.EQUAL,
+    shares: [
+      {
+        debtorId: ayush.id,
+        amount: 3000,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: priya.id,
+        amount: 3000,
+        status: ExpenseShareStatus.PAID,
+      },
+      {
+        debtorId: neha.id,
+        amount: 3000,
+        status: ExpenseShareStatus.PAID,
+      },
+    ],
+  });
 }
 
 main()

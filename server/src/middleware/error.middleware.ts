@@ -2,12 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 import { ApiError } from "../utils/api-error.js";
 
-export function errorHandler(
-  error: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction,
-) {
+export function errorHandler(error: Error, _req: Request, res: Response, _next: NextFunction) {
   console.error(error);
 
   if (error instanceof ApiError) {

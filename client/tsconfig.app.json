@@ -1,13 +1,20 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "ignoreDeprecations": "6.0",
     "target": "ES2023",
     "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "types": ["vite/client"],
-    "skipLibCheck": true,
 
-    /* Bundler mode */
+    "skipLibCheck": true,
+    "strict": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
@@ -15,13 +22,6 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Path Aliases */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    },
-
-    /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

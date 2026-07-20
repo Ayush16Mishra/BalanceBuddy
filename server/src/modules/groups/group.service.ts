@@ -3,123 +3,110 @@ import { CreateGroupInput } from "./group.validation.js";
 import { ApiError } from "../../utils/api-error.js";
 import type { UpdateGroupInput } from "./group.validation.js";
 import { expenseSharesService } from "../expense-shares/expense-shares.service.js";
+import { emitGroupUpdated } from "../../socket/emitters.js";
+import { redis } from "../../utils/redis.js";
 
 export const groupService = {
   async createGroup(userId: string, data: CreateGroupInput) {
-    return groupRepository.createGroup(userId, data);
+    const group = await groupRepository.createGroup(userId, data);
+
+    await redis.del(`dashboard:${userId}`);
+
+    return group;
   },
 
   async getUserGroups(userId: string) {
-  return groupRepository.getUserGroups(userId);
-},
+    return groupRepository.getUserGroups(userId);
+  },
 
-async getGroupById(groupId: string, userId: string) {
-  const group = await groupRepository.getGroupById(groupId, userId);
+  async getGroupById(groupId: string, userId: string) {
+    const group = await groupRepository.getGroupById(groupId, userId);
 
-  if (!group) {
-    throw new ApiError(404, "Group not found.");
-  }
+    if (!group) {
+      throw new ApiError(404, "Group not found.");
+    }
 
-  return group;
-},
-async getGroupBalances(userId: string, groupId: string) {
-  // Verify the user belongs to the group.
-  await this.getGroupById(groupId, userId);
+    return group;
+  },
+  async getGroupBalances(userId: string, groupId: string) {
+    // Verify the user belongs to the group.
+    await this.getGroupById(groupId, userId);
 
-  return expenseSharesService.getOutstandingBalances(
-    userId,
-    groupId
-  );
-},
-async updateGroup(
-  groupId: string,
-  userId: string,
-  data: UpdateGroupInput
-) {
-  // Ensure the user belongs to the group.
-  await this.getGroupById(groupId, userId);
+    return expenseSharesService.getOutstandingBalances(userId, groupId);
+  },
+  async updateGroup(groupId: string, userId: string, data: UpdateGroupInput) {
+    // Ensure the user belongs to the group.
+    await this.getGroupById(groupId, userId);
 
-  return groupRepository.updateGroup(groupId, data);
-},
+    const updatedGroup = await groupRepository.updateGroup(groupId, data);
 
+    // Emit after successful update
+    emitGroupUpdated(groupId, updatedGroup);
 
-async deleteGroup(groupId: string, userId: string) {
-  // Verify the user belongs to the group.
-  await this.getGroupById(groupId, userId);
+    return updatedGroup;
+  },
 
-  await groupRepository.deleteGroup(groupId);
-},
+  async deleteGroup(groupId: string, userId: string) {
+    // Verify the user belongs to the group.
+    await this.getGroupById(groupId, userId);
 
-async generateInviteLink(groupId: string, userId: string) {
-  await this.getGroupById(groupId, userId);
+    await groupRepository.deleteGroup(groupId);
+  },
 
-  const membershipLocked = await groupRepository.hasExpenses(groupId);
+  async generateInviteLink(groupId: string, userId: string) {
+    await this.getGroupById(groupId, userId);
 
-  if (membershipLocked) {
-    throw new ApiError(
-      409,
-      "Group membership is locked after the first expense."
-    );
-  }
+    const membershipLocked = await groupRepository.hasExpenses(groupId);
 
-  let invite = await groupRepository.getActiveInvite(groupId);
+    if (membershipLocked) {
+      throw new ApiError(409, "Group membership is locked after the first expense.");
+    }
 
-  if (!invite) {
-    invite = await groupRepository.createInvite(groupId);
-  }
+    let invite = await groupRepository.getActiveInvite(groupId);
 
-  return {
-    token: invite.token,
-    expiresAt: invite.expiresAt,
-  };
-},
-async joinGroup(token: string, userId: string) {
-  const invite = await groupRepository.getInviteByToken(token);
+    if (!invite) {
+      invite = await groupRepository.createInvite(groupId);
+    }
 
-  if (!invite) {
-    throw new ApiError(404, "Invalid invite link.");
-  }
+    return {
+      token: invite.token,
+      expiresAt: invite.expiresAt,
+    };
+  },
+  async joinGroup(token: string, userId: string) {
+    const invite = await groupRepository.getInviteByToken(token);
 
-  if (invite.expiresAt < new Date()) {
-    throw new ApiError(400, "Invite link has expired.");
-  }
+    if (!invite) {
+      throw new ApiError(404, "Invalid invite link.");
+    }
 
-  const membershipLocked = await groupRepository.hasExpenses(invite.groupId);
+    if (invite.expiresAt < new Date()) {
+      throw new ApiError(400, "Invite link has expired.");
+    }
 
-  if (membershipLocked) {
-    throw new ApiError(
-      409,
-      "Group membership is locked after the first expense."
-    );
-  }
+    const membershipLocked = await groupRepository.hasExpenses(invite.groupId);
 
-  const existingMember = await groupRepository.isGroupMember(
-    invite.groupId,
-    userId
-  );
+    if (membershipLocked) {
+      throw new ApiError(409, "Group membership is locked after the first expense.");
+    }
 
-  if (existingMember) {
-    throw new ApiError(400, "You are already a member of this group.");
-  }
+    const existingMember = await groupRepository.isGroupMember(invite.groupId, userId);
 
-  await groupRepository.addGroupMember(invite.groupId, userId);
+    if (existingMember) {
+      throw new ApiError(400, "You are already a member of this group.");
+    }
 
-  return groupRepository.getGroupById(invite.groupId, userId);
-},
+    await groupRepository.addGroupMember(invite.groupId, userId);
 
-async settleGroupBalance(
-  currentUserId: string,
-  otherUserId: string,
-  groupId: string
-) {
-  // Verify the current user belongs to the group.
-  await this.getGroupById(groupId, currentUserId);
+    await redis.del(`dashboard:${userId}`);
 
-  return expenseSharesService.settleGroupBalance(
-    currentUserId,
-    otherUserId,
-    groupId
-  );
-},
+    return groupRepository.getGroupById(invite.groupId, userId);
+  },
 
+  async settleGroupBalance(currentUserId: string, otherUserId: string, groupId: string) {
+    // Verify the current user belongs to the group.
+    await this.getGroupById(groupId, currentUserId);
+
+    return expenseSharesService.settleGroupBalance(currentUserId, otherUserId, groupId);
+  },
 };

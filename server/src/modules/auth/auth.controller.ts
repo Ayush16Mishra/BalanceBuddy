@@ -5,36 +5,26 @@ import {
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
+  resendVerificationSchema,
   resetPasswordSchema,
 } from "./auth.validation.js";
-import {
-  setRefreshTokenCookie,
-  clearRefreshTokenCookie,
-} from "../../utils/cookies.js";
+import { setRefreshTokenCookie, clearRefreshTokenCookie } from "../../utils/cookies.js";
 import { asyncHandler } from "../../utils/async-handler.js";
+import type { Profile } from "passport-google-oauth20";
 
 export const authController = {
   register: asyncHandler(async (req: Request, res: Response) => {
     const data = registerSchema.parse(req.body);
 
-    const {
-      user,
-      accessToken,
-      refreshToken,
-      verificationToken,
-    } = await authService.register(data);
+    const { user, accessToken, refreshToken } = await authService.register(data);
 
     setRefreshTokenCookie(res, refreshToken);
-
-    const verificationUrl = `http://localhost:5173/verify-email?token=${verificationToken}`;
-
     return res.status(201).json({
       success: true,
       message: "User registered successfully.",
       data: {
         user,
         accessToken,
-        verificationUrl,
       },
     });
   }),
@@ -57,11 +47,22 @@ export const authController = {
     });
   }),
 
+  resendVerification: asyncHandler(async (req: Request, res: Response) => {
+    const data = resendVerificationSchema.parse(req.body);
+
+    await authService.resendVerification(data);
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "If your account exists and is not yet verified, a new verification email has been sent.",
+    });
+  }),
+
   login: asyncHandler(async (req: Request, res: Response) => {
     const data = loginSchema.parse(req.body);
 
-    const { user, accessToken, refreshToken } =
-      await authService.login(data);
+    const { user, accessToken, refreshToken } = await authService.login(data);
 
     setRefreshTokenCookie(res, refreshToken);
 
@@ -75,24 +76,35 @@ export const authController = {
     });
   }),
 
-  forgotPassword: asyncHandler(
-  async (req: Request, res: Response) => {
+  googleCallback: asyncHandler(async (req: Request, res: Response) => {
+    const profile = req.user as Profile | undefined;
+
+    if (!profile) {
+      throw new ApiError(401, "Google authentication failed.");
+    }
+
+    const { user: _user, accessToken, refreshToken } = await authService.googleLogin(profile);
+
+    setRefreshTokenCookie(res, refreshToken);
+
+    const redirectUrl = new URL(process.env.GOOGLE_SUCCESS_REDIRECT!);
+
+    redirectUrl.searchParams.set("accessToken", accessToken);
+
+    return res.redirect(redirectUrl.toString());
+  }),
+
+  forgotPassword: asyncHandler(async (req: Request, res: Response) => {
     const data = forgotPasswordSchema.parse(req.body);
 
-    const result = await authService.forgotPassword(data);
+    await authService.forgotPassword(data);
 
     return res.status(200).json({
       success: true,
-      message:
-        "If an account exists, a password reset link has been sent.",
-      data: result
-        ? {
-            resetUrl: `http://localhost:5173/reset-password?token=${result.resetToken}`,
-          }
-        : {},
+      message: "If an account exists, a password reset link has been sent.",
+      data: {},
     });
-  },
-),
+  }),
 
   refresh: asyncHandler(async (req: Request, res: Response) => {
     const refreshToken = req.cookies.refreshToken;
@@ -101,10 +113,7 @@ export const authController = {
       throw new ApiError(401, "Refresh token is missing.");
     }
 
-    const {
-      accessToken,
-      refreshToken: newRefreshToken,
-    } = await authService.refresh(refreshToken);
+    const { accessToken, refreshToken: newRefreshToken } = await authService.refresh(refreshToken);
 
     setRefreshTokenCookie(res, newRefreshToken);
 
@@ -128,8 +137,7 @@ export const authController = {
     });
   }),
 
-  resetPassword: asyncHandler(
-  async (req: Request, res: Response) => {
+  resetPassword: asyncHandler(async (req: Request, res: Response) => {
     const data = resetPasswordSchema.parse(req.body);
 
     await authService.resetPassword(data);
@@ -138,7 +146,5 @@ export const authController = {
       success: true,
       message: "Password reset successfully.",
     });
-  },
-),
-
+  }),
 };

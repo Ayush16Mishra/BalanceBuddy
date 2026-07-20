@@ -6,7 +6,7 @@ const router = Router();
 
 router.get("/me", authenticate, usersController.getCurrentUser);
 router.patch("/me", authenticate, usersController.updateProfile);
-router.patch("/me/password",authenticate,usersController.changePassword);
-router.delete("/me",authenticate,usersController.deleteAccount);
+router.patch("/me/password", authenticate, usersController.changePassword);
+router.delete("/me", authenticate, usersController.deleteAccount);
 
 export default router;

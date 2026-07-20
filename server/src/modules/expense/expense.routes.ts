@@ -6,6 +6,8 @@ import { expenseController } from "./expense.controller.js";
 
 const router = Router();
 
-router.post("/",authenticate,asyncHandler(expenseController.createExpense));
-router.patch("/:expenseId/cancel",authenticate,asyncHandler(expenseController.cancelExpense));
+router.post("/", authenticate, asyncHandler(expenseController.createExpense));
+router.get("/:expenseId", authenticate, asyncHandler(expenseController.getExpenseDetails));
+router.patch("/:expenseId/cancel", authenticate, asyncHandler(expenseController.cancelExpense));
+
 export default router;
