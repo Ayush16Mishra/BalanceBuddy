@@ -12,6 +12,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "format": "prettier --write .",
+    "prisma:deploy": "prisma migrate deploy",
     "format:check": "prettier --check ."
   },
   "keywords": [],
